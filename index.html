@@ -96,15 +96,31 @@
 
     const MimoVectorLogo = () => (
       <div className="flex items-center gap-2 select-none shrink-0">
-        <div className="w-10 h-10 bg-white p-0.5 flex items-center justify-center border border-sky-450 rounded-none shadow-sm shadow-sky-500/10">
-          <svg viewBox="0 0 120 135" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 20C12 20 30 15 60 15C90 15 108 20 108 20C108 20 115 95 100 115C85 130 60 130 60 130C60 130 35 130 20 115C5 95 12 20 12 20Z" stroke="#0284c7" strokeWidth="8" fill="#ffffff" />
-            <path d="M60 38C48 26 38 42 45 56C51 67 60 78 60 78C60 78 69 67 75 56C82 42 72 26 60 38Z" fill="#38bdf8" opacity="0.15" />
-            <path d="M53 38h14v28H53z" fill="#0284c7" />
-            <path d="M46 45h28v14H46z" fill="#0284c7" />
-            <path d="M38 52h10l4-7l4 14l4-10l4 3h10" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M30 84C40 96 80 96 90 84" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
-            <text x="60" y="112" fill="#0f172a" fontSize="13" fontWeight="950" fontFamily="sans-serif" textAnchor="middle">MIMO</text>
+        <div className="w-11 h-11 bg-white p-0.5 flex items-center justify-center border border-slate-200 rounded-lg shadow-xs">
+          <svg viewBox="0 0 200 200" className="w-[40px] h-[40px]" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Soft-rounded outer shield / crest in blue */}
+            <path d="M25 40C25 40 55 25 100 25C145 25 175 40 175 40C175 40 185 110 160 145C135 180 100 185 100 185C100 185 65 180 40 145C15 110 25 40 25 40Z" fill="#ffffff" stroke="#2d529f" strokeWidth="11" strokeLinejoin="round" />
+            
+            {/* Light blue orbit loops / ribbons in the background */}
+            <path d="M60 85 C52 55, 148 55, 140 85 C132 115, 68 115, 60 85 Z" stroke="#8cb2e6" strokeWidth="7" strokeLinecap="round" opacity="0.65" />
+            <path d="M70 100 C70 115, 130 115, 130 100" stroke="#8cb2e6" strokeWidth="4.5" strokeLinecap="round" opacity="0.6" />
+
+            {/* Bright inner blue shield */}
+            <path d="M100 55 C120 40, 145 60, 130 100 C118 120, 100 135, 100 135 C100 135, 82 120, 70 100 C55 60, 80 40, 100 55 Z" fill="#2d529f" />
+
+            {/* White Healthcare Cross inside Center */}
+            <path d="M91 68 H109 V104 H91 Z" fill="#ffffff" />
+            <path d="M82 77 H118 V95 H82 Z" fill="#ffffff" />
+
+            {/* White pulse wave line laid inside the cross */}
+            <path d="M75 86 h10 l4 -13 l5 28 l6 -23 l3 8 h15" stroke="#2d529f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M75 86 h10 l4 -13 l5 28 l6 -23 l3 8 h15" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{transform: "translateY(0.5px)"}} />
+
+            {/* Polished heavy typography MIMO */}
+            <text x="100" y="162" fill="#2d529f" fontSize="24" fontWeight="950" fontFamily="'Space Grotesk', sans-serif" textAnchor="middle" letterSpacing="0.5">MIMO</text>
+            
+            {/* Subtitle */}
+            <text x="100" y="174" fill="#5f7da3" fontSize="5.5" fontWeight="700" fontFamily="sans-serif" textAnchor="middle">MANAGEMENT OF OBESITY</text>
           </svg>
         </div>
       </div>
@@ -230,6 +246,7 @@
       const [selectedIntervention, setSelectedIntervention] = useState('all');
 
       const [activePage, setActivePage] = useState('page1');
+      const [isSidebarOpen, setIsSidebarOpen] = useState(true);
       const [isUnlocked, setIsUnlocked] = useState(false);
       const [passwordInput, setPasswordInput] = useState('');
       const [passwordError, setPasswordError] = useState(null);
@@ -521,8 +538,8 @@
                       PROGRAM MIMO KEDAH
                     </span>
                     <span className="text-slate-700 text-xs">•</span>
-                    <span className="text-[10px] font-bold text-sky-400 uppercase tracking-widest font-mono">
-                      State of Kedah
+                    <span className="text-[10px] font-bold text-sky-450 uppercase tracking-wider font-mono">
+                      Multidisciplinary Integrated Management of Obesity (MIMO)
                     </span>
                   </div>
                   <h1 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight font-display">
@@ -531,8 +548,22 @@
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                <button onClick={fetchClientData} className="flex items-center gap-2 px-4 py-2 bg-sky-450 hover:bg-sky-500 text-black font-black uppercase text-xs font-display tracking-widest transition-all">
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+                  className="flex items-center gap-2 px-3  py-2 bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 font-bold uppercase text-[10px] sm:text-xs font-display tracking-widest transition-all"
+                  title="Klik untuk membuka/menutup menu"
+                >
+                  <svg className="w-3.5 h-3.5 text-sky-450" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {isSidebarOpen ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M18.278 16.864a1 1 0 0 1-1.414 1.414L12 13.414l-4.864 4.864a1 1 0 1 1-1.414-1.414L10.586 12 5.722 7.136a1 1 0 1 1 1.414-1.414L12 10.586l4.864-4.864a1 1 0 1 1 1.414 1.414L13.414 12l4.864 4.864z" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
+                    )}
+                  </svg>
+                  {isSidebarOpen ? 'Sembunyi Menu' : 'Papar Menu'}
+                </button>
+                <button onClick={fetchClientData} className="flex items-center gap-2 px-3 py-2 bg-sky-450 hover:bg-sky-500 text-black font-black uppercase text-[10px] sm:text-xs font-display tracking-widest transition-all">
                   <Icon name="refresh" className="w-3.5 h-3.5 animate-pulse" />
                   SEGARKAN DATA
                 </button>
@@ -543,34 +574,60 @@
           <div className="flex-1 max-w-7xl w-full mx-auto flex flex-col md:flex-row">
             
             {/* Sidebar with Navigation Tabs */}
-            <aside className="w-full md:w-64 bg-black text-slate-350 p-4 border-r border-slate-900 shrink-0">
-              <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase px-3 mb-4">NAVIGASI SISTEM</p>
-              <nav className="space-y-1">
-                <button 
-                  onClick={() => setActivePage('page1')} 
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none text-left transition-all ${activePage === 'page1' ? 'bg-sky-600 text-white border-l-4 border-sky-450 font-extrabold' : 'hover:bg-slate-900 hover:text-white border-l-4 border-transparent'}`}
-                >
-                  <Icon name="trending" className="w-4 h-4 text-sky-450" />
-                  Dashboard MIMO
-                </button>
-                <button 
-                  onClick={() => setActivePage('page2')} 
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none text-left transition-all ${activePage === 'page2' ? 'bg-sky-600 text-white border-l-4 border-sky-450 font-extrabold' : 'hover:bg-slate-900 hover:text-white border-l-4 border-transparent'}`}
-                >
-                  <Icon name="users" className="w-4 h-4 text-sky-450" />
-                  Direktori Pesakit (OSA)
-                </button>
-                <a 
-                  href="https://docs.google.com/spreadsheets/d/1Zn7JHkTrfol2G0Sl4b0oazryk2Syhbp0Xj74HPD1PXU/edit?usp=sharing" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none text-left transition-all hover:bg-slate-900 hover:text-white text-slate-400 border-l-4 border-transparent"
-                >
-                  <Icon name="shield" className="w-4 h-4 text-sky-450" />
-                  Akses Google Sheet
-                </a>
-              </nav>
-            </aside>
+            {isSidebarOpen && (
+              <aside className="w-full md:w-64 bg-black text-slate-350 p-4 border-r border-slate-900 shrink-0 select-none">
+                <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase px-3 mb-4">MENU UTAMA</p>
+                <nav className="space-y-1.5">
+                  {/* Pilihan 1: Sistem Pengisian Data MIMO */}
+                  <a 
+                    href="https://sites.google.com/moh.gov.my/sistem/reten-mimo" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="w-full flex items-start gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none text-left transition-all hover:bg-slate-900 hover:text-white text-slate-300 border-l-4 border-transparent"
+                    title="Klik untuk memasukkan atau mengemaskini data pesakit"
+                  >
+                    <Icon name="info" className="w-4 h-4 text-sky-450 shrink-0 mt-0.5" />
+                    <div className="leading-tight">
+                      <span className="block font-black text-sky-450 text-[11px]">Sistem Pengisian Data MIMO</span>
+                      <span className="block text-[8px] text-slate-500 font-normal normal-case mt-0.5">Daftar & kemaskini butiran pesakit</span>
+                    </div>
+                  </a>
+
+                  {/* Pilihan 2: Dashboard MIMO Kedah */}
+                  <button 
+                    onClick={() => setActivePage('page1')} 
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none text-left transition-all ${activePage === 'page1' ? 'bg-sky-600 text-white border-l-4 border-sky-450 font-extrabold' : 'hover:bg-slate-900 hover:text-white border-l-4 border-transparent'}`}
+                  >
+                    <Icon name="trending" className="w-4 h-4 text-sky-450 shrink-0" />
+                    Dashboard MIMO Kedah
+                  </button>
+
+                  {/* Pilihan 3: Direktori Pesakit (SULIT) */}
+                  <button 
+                    onClick={() => setActivePage('page2')} 
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none text-left transition-all ${activePage === 'page2' ? 'bg-sky-600 text-white border-l-4 border-sky-450 font-extrabold' : 'hover:bg-slate-900 hover:text-white border-l-4 border-transparent'}`}
+                  >
+                    <Icon name="users" className="w-4 h-4 text-sky-450 shrink-0" />
+                    Direktori Pesakit (SULIT)
+                  </button>
+
+                  {/* Pilihan 4: Rujukan MIMO */}
+                  <a 
+                    href="https://linktr.ee/BENGKELTOTMIMO" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="w-full flex items-start gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none text-left transition-all hover:bg-slate-900 hover:text-white text-slate-300 border-l-4 border-transparent"
+                    title="Klik untuk membuka rujukan & bahan bengkel TOT"
+                  >
+                    <Icon name="shield" className="w-4 h-4 text-sky-450 shrink-0 mt-0.5" />
+                    <div className="leading-tight">
+                      <span className="block font-black text-sky-450 text-[11px]">Rujukan MIMO</span>
+                      <span className="block text-[8px] text-slate-500 font-normal normal-case mt-0.5">Bahan bengkel & TOT rujukan</span>
+                    </div>
+                  </a>
+                </nav>
+              </aside>
+            )}
 
             {/* Content Body */}
             <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
@@ -795,9 +852,9 @@
                       <div className="w-12 h-12 bg-red-50 border border-red-200 flex items-center justify-center text-red-650 rounded-none mb-3">
                         <Icon name="lock" className="w-6 h-6 text-red-600" />
                       </div>
-                      <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-1 font-display">AKSES SULIT (OSA)</h3>
+                      <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-1 font-display">AKSES SULIT (SULIT)</h3>
                       <p className="text-xs text-slate-500 mb-6 leading-relaxed">
-                        Khas Kakitangan Perubatan MIMO Kedah sahaja. Borang saringan rawatan pesakit dilindungi di bawah undang-undang data OSA.
+                        Khas Kakitangan Perubatan MIMO Kedah sahaja. Borang saringan rawatan pesakit dikategorikan di bawah data SULIT Jabatan Kesihatan.
                       </p>
 
                       <form onSubmit={handleUnlock} className="w-full space-y-4">
