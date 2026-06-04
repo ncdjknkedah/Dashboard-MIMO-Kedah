@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Pemantauan MIMO Kedah</title>
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Space Grotesk -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <!-- React & ReactDOM (UMD CDN) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- Babel Standalone compiler (In-browser JSX compilation) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- PapaParse CDN for Google Sheets Dynamic Client parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    /* Simple geometric scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 0px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sky: {
+              350: '#7dd3fc',
+              450: '#38bdf8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+  <div id="root">
+    <!-- Loader before Babel compiles -->
+    <div class="min-h-screen flex flex-col items-center justify-center p-6 text-slate-700">
+      <div class="w-12 h-12 rounded-full border-4 border-slate-100 border-t-sky-500 animate-spin mb-4"></div>
+      <p class="font-medium text-slate-900 text-sm">Memuat naik Sistem Pemantauan MIMO...</p>
+    </div>
+  </div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const CLINIC_SHORTS = {
+      "KLINIK KESIHATAN BANDAR ALOR SETAR": "KKBAS",
+      "KLINIK KESIHATAN BANDAR SUNGAI PETANI": "KKBSP"
+    };
+
+    // Responsive Inline custom SVG Indicators 
+    const Icon = ({ name, className = "w-4 h-4" }) => {
+      const paths = {
+        trending: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />,
+        users: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />,
+        map: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />,
+        refresh: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.2" />,
+        shield: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />,
+        search: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
+        lock: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />,
+        info: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+        chevronRight: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />,
+        check: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />,
+        x: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+      };
+      
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {paths[name] || null}
+        </svg>
+      );
+    };
+
+    const MimoVectorLogo = () => (
+      <div className="flex items-center gap-2 select-none shrink-0">
+        <div className="w-10 h-10 bg-white p-0.5 flex items-center justify-center border border-sky-450 rounded-none shadow-sm shadow-sky-500/10">
+          <svg viewBox="0 0 120 135" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 20C12 20 30 15 60 15C90 15 108 20 108 20C108 20 115 95 100 115C85 130 60 130 60 130C60 130 35 130 20 115C5 95 12 20 12 20Z" stroke="#0284c7" strokeWidth="8" fill="#ffffff" />
+            <path d="M60 38C48 26 38 42 45 56C51 67 60 78 60 78C60 78 69 67 75 56C82 42 72 26 60 38Z" fill="#38bdf8" opacity="0.15" />
+            <path d="M53 38h14v28H53z" fill="#0284c7" />
+            <path d="M46 45h28v14H46z" fill="#0284c7" />
+            <path d="M38 52h10l4-7l4 14l4-10l4 3h10" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M30 84C40 96 80 96 90 84" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" />
+            <text x="60" y="112" fill="#0f172a" fontSize="13" fontWeight="950" fontFamily="sans-serif" textAnchor="middle">MIMO</text>
+          </svg>
+        </div>
+      </div>
+    );
+
+    // Native custom highly stylized responsive SVG Bar chart
+    const ComorbidityBarChart = ({ data }) => {
+      const maxVal = 12;
+      const chartHeight = 200;
+      const groundY = 220;
+
+      return (
+        <div className="w-full flex items-center justify-center p-2 font-mono">
+          <svg className="w-full h-64 max-w-md" viewBox="0 0 460 260" xmlns="http://www.w3.org/2000/svg">
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+              const y = 20 + ratio * chartHeight;
+              const label = Math.round((1 - ratio) * maxVal);
+              return (
+                <g key={i}>
+                  <line x1="40" y1={y} x2="440" y2={y} stroke="#f1f5f9" strokeWidth="1" />
+                  <text x="30" y={y + 4} fill="#94a3b8" fontSize="10" textAnchor="end">{label}</text>
+                </g>
+              );
+            })}
+
+            {data.map((item, idx) => {
+              const groupX = 60 + idx * 190;
+              const barWidth = 28;
+              const gap = 8;
+
+              const dm = item.Diabetes || 0;
+              const ht = item.Hipertensi || 0;
+              const dl = item.Dislipidemia || 0;
+
+              const dmH = (dm / maxVal) * chartHeight;
+              const htH = (ht / maxVal) * chartHeight;
+              const dlH = (dl / maxVal) * chartHeight;
+
+              return (
+                <g key={idx}>
+                  <text x={groupX + barWidth * 1.5 + gap} y={groundY + 20} fill="#475569" fontSize="11" fontWeight="700" textAnchor="middle" className="font-sans font-display">
+                    {item.clinic === 'KKBAS' ? 'KK Bandar Alor Setar' : 'KK Sg. Petani'}
+                  </text>
+                  {/* Diabetes */}
+                  <rect x={groupX} y={groundY - dmH} width={barWidth} height={dmH} fill="#3b82f6" />
+                  <text x={groupX + barWidth/2} y={groundY - dmH - 6} fill="#0f172a" fontSize="9" fontWeight="900" textAnchor="middle">{dm}</text>
+
+                  {/* Hipertensi */}
+                  <rect x={groupX + barWidth + gap} y={groundY - htH} width={barWidth} height={htH} fill="#ef4444" />
+                  <text x={groupX + barWidth + gap + barWidth/2} y={groundY - htH - 6} fill="#0f172a" fontSize="9" fontWeight="900" textAnchor="middle">{ht}</text>
+
+                  {/* Dislipidemia */}
+                  <rect x={groupX + 2*barWidth + 2*gap} y={groundY - dlH} width={barWidth} height={dlH} fill="#0d9488" />
+                  <text x={groupX + 2*barWidth + 2*gap + barWidth/2} y={groundY - dlH - 6} fill="#0f172a" fontSize="9" fontWeight="900" textAnchor="middle">{dl}</text>
+                </g>
+              );
+            })}
+            <line x1="40" y1={groundY} x2="440" y2={groundY} stroke="#cbd5e1" strokeWidth="1.5" />
+          </svg>
+        </div>
+      );
+    };
+
+    // Native circular SVG Donut Chart
+    const BmiDonutChart = ({ data, total }) => {
+      let accumulatedPercent = 0;
+      const radius = 50;
+      const strokeWidth = 14;
+      const circumference = 2 * Math.PI * radius;
+
+      return (
+        <div className="relative w-full h-[220px] flex items-center justify-center">
+          <svg className="w-56 h-56 transform -rotate-90" viewBox="0 0 140 140">
+            {data.map((item, index) => {
+              const val = item.value;
+              const percent = val / (total || 1);
+              const strokeLength = percent * circumference;
+              const strokeOffset = circumference - (accumulatedPercent * circumference);
+              accumulatedPercent += percent;
+
+              const colors = ['#38bdf8', '#0ea5e9', '#0284c7', '#0c4a6e', '#64748b'];
+              const color = colors[index % colors.length];
+
+              return (
+                <circle 
+                  key={index}
+                  cx="70"
+                  cy="70"
+                  r={radius}
+                  fill="transparent"
+                  stroke={color}
+                  strokeWidth={strokeWidth}
+                  strokeDasharray={`${strokeLength} ${circumference}`}
+                  strokeDashoffset={strokeOffset}
+                  style={{ transformOrigin: '70px 70px' }}
+                />
+              );
+            })}
+          </svg>
+          <div className="absolute inset-0 flex flex-col justify-center items-center pointer-events-none mt-[-4px]">
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">KUMPULAN</span>
+            <span className="text-sm font-black text-slate-900 tracking-wide font-display">OBESITI</span>
+          </div>
+        </div>
+      );
+    };
+
+    function parseFloatSafe(val) {
+      if (val === undefined || val === null) return 0;
+      const cleaned = String(val).replace(/,/g, '').trim();
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? 0 : num;
+    }
+
+    export default function App() {
+      const [data, setData] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+      const [searchTerm, setSearchTerm] = useState('');
+      const [selectedClinic, setSelectedClinic] = useState('all');
+      const [selectedBmiClass, setSelectedBmiClass] = useState('all');
+      const [selectedGender, setSelectedGender] = useState('all');
+      const [selectedIntervention, setSelectedIntervention] = useState('all');
+
+      const [activePage, setActivePage] = useState('page1');
+      const [isUnlocked, setIsUnlocked] = useState(false);
+      const [passwordInput, setPasswordInput] = useState('');
+      const [passwordError, setPasswordError] = useState(null);
+      const [selectedPatient, setSelectedPatient] = useState(null);
+
+      async function fetchClientData() {
+        setLoading(true);
+        const url = 'https://docs.google.com/spreadsheets/d/1Zn7JHkTrfol2G0Sl4b0oazryk2Syhbp0Xj74HPD1PXU/export?format=csv';
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`Google Sheet fetch error status ${response.status}`);
+          const text = await response.text();
+          
+          Papa.parse(text, {
+            header: false,
+            complete: (results) => {
+              const rows = results.data;
+              const patientRows = rows.slice(7).filter(row => row[6] && row[6].trim() !== '');
+
+              const patients = patientRows.map((row) => {
+                const mntVal = (row[59] || '').trim().toUpperCase();
+                const senamanVal = (row[61] || '').trim().toUpperCase();
+                const tingkahlakuVal = (row[63] || '').trim().toUpperCase();
+                const farmakologiVal = (row[65] || '').trim().toUpperCase();
+                const bariatrikVal = (row[69] || '').trim().toUpperCase();
+
+                const isMNT = ['YA', 'SELESAI', 'DALAM PROSES', 'ADA'].includes(mntVal);
+                const isSenaman = ['YA', 'SELESAI', 'DALAM PROSES', 'ADA'].includes(senamanVal);
+                const isTingkahLaku = ['YA', 'SELESAI', 'DALAM PROSES', 'ADA'].includes(tingkahlakuVal);
+                const isFarmakologi = farmakologiVal !== '' && farmakologiVal !== 'TIDAK BERKAITAN' && farmakologiVal !== 'TIDAK';
+                const isBariatrik = bariatrikVal !== '' && bariatrikVal !== 'TIDAK BERKAITAN' && bariatrikVal !== 'TIDAK';
+
+                return {
+                  negeri: (row[0] || '').trim(),
+                  daerah: (row[1] || '').trim(),
+                  fasiliti: (row[2] || '').trim(),
+                  sumberRujukan: (row[3] || '').trim(),
+                  statusRujukan: (row[5] || '').trim(),
+                  nama: (row[6] || '').trim(),
+                  noId: (row[7] || '').trim(),
+                  tarikhLahir: (row[8] || '').trim(),
+                  umur: parseFloatSafe(row[9]),
+                  bangsa: (row[10] || '').trim(),
+                  jantina: (row[11] || '').trim(),
+                  noTelefon: (row[12] || '').trim(),
+
+                  comorbidities: {
+                    diabetes: (row[13] || '').trim().toUpperCase() === 'YA',
+                    hipertensi: (row[14] || '').trim().toUpperCase() === 'YA',
+                    dislipidemia: (row[15] || '').trim().toUpperCase() === 'YA',
+                    kardiovaskular: (row[16] || '').trim().toUpperCase() === 'YA',
+                    lainLain: (row[17] || '').trim() !== '' && (row[17] || '').trim().toUpperCase() !== 'TIDAK'
+                  },
+
+                  baseline: {
+                    tinggi: parseFloatSafe(row[18]),
+                    berat: parseFloatSafe(row[19]),
+                    bmi: parseFloatSafe(row[20]),
+                    bmiKategori: (row[21] || '').trim(),
+                    waist: parseFloatSafe(row[22]),
+                    systolic: parseFloatSafe(row[23]),
+                    diastolic: parseFloatSafe(row[24]),
+                    mentalStatus: (row[52] || '').trim(),
+                    mentalResult: (row[53] || '').trim()
+                  },
+
+                  interventions: {
+                    mnt: isMNT,
+                    mntTarikh: (row[60] || '').trim(),
+                    senaman: isSenaman,
+                    senamanTarikh: (row[62] || '').trim(),
+                    tingkahLaku: isTingkahLaku,
+                    tingkahLakuTarikh: (row[64] || '').trim(),
+                    farmakologi: (row[65] || '').trim(),
+                    farmakologiTarikh: (row[66] || '').trim(),
+                    bariatrik: isBariatrik,
+                    bariatrikTarikh: (row[70] || '').trim()
+                  },
+                  tarikhDaftar: (row[197] || '').trim(),
+                  statusAkaun: (row[199] || 'AKTIF').trim()
+                };
+              });
+
+              const clinicsMap = {
+                "KLINIK KESIHATAN BANDAR ALOR SETAR": {
+                  name: "KK Bandar Alor Setar (KKBAS)",
+                  keyName: "KLINIK KESIHATAN BANDAR ALOR SETAR",
+                  registeredCount: 0,
+                  withInterventionCount: 0,
+                  mntCount: 0,
+                  senamanCount: 0,
+                  tingkahlakuCount: 0,
+                  farmakologiCount: 0
+                },
+                "KLINIK KESIHATAN BANDAR SUNGAI PETANI": {
+                  name: "KK Bandar Sungai Petani (KKBSP)",
+                  keyName: "KLINIK KESIHATAN BANDAR SUNGAI PETANI",
+                  registeredCount: 0,
+                  withInterventionCount: 0,
+                  mntCount: 0,
+                  senamanCount: 0,
+                  tingkahlakuCount: 0,
+                  farmakologiCount: 0
+                }
+              };
+
+              patients.forEach(p => {
+                let key = p.fasiliti;
+                if (!clinicsMap[key]) {
+                  if (key.includes('ALOR SETAR')) {
+                    key = "KLINIK KESIHATAN BANDAR ALOR SETAR";
+                  } else if (key.includes('SUNGAI PETANI')) {
+                    key = "KLINIK KESIHATAN BANDAR SUNGAI PETANI";
+                  } else {
+                    clinicsMap[key] = {
+                      name: key,
+                      keyName: key,
+                      registeredCount: 0,
+                      withInterventionCount: 0,
+                      mntCount: 0,
+                      senamanCount: 0,
+                      tingkahlakuCount: 0,
+                      farmakologiCount: 0
+                    };
+                  }
+                }
+
+                const clinic = clinicsMap[key];
+                clinic.registeredCount++;
+
+                const hasAny = p.interventions.mnt || p.interventions.senaman || p.interventions.tingkahLaku || (p.interventions.farmakologi && p.interventions.farmakologi !== 'TIDAK BERKAITAN' && p.interventions.farmakologi !== 'TIDAK');
+                if (hasAny) clinic.withInterventionCount++;
+
+                if (p.interventions.mnt) clinic.mntCount++;
+                if (p.interventions.senaman) clinic.senamanCount++;
+                if (p.interventions.tingkahLaku) clinic.tingkahlakuCount++;
+                if (p.interventions.farmakologi && p.interventions.farmakologi !== 'TIDAK BERKAITAN' && p.interventions.farmakologi !== 'TIDAK') clinic.farmakologiCount++;
+              });
+
+              const clinicsList = Object.values(clinicsMap).map(c => {
+                const pct = c.registeredCount > 0 ? (c.withInterventionCount / c.registeredCount * 100) : 0;
+                return {
+                  ...c,
+                  kpiPercentage: Math.round(pct * 10) / 10,
+                  isAchieved: pct >= 80.0
+                };
+              });
+
+              const totalReg = patients.length;
+              const totalInt = patients.filter(p => p.interventions.mnt || p.interventions.senaman || p.interventions.tingkahLaku || (p.interventions.farmakologi && p.interventions.farmakologi !== 'TIDAK BERKAITAN' && p.interventions.farmakologi !== 'TIDAK')).length;
+              const overallPct = totalReg > 0 ? (totalInt / totalReg * 100) : 0;
+
+              setData({
+                lastUpdated: new Date().toISOString(),
+                overall: {
+                  registeredCount: totalReg,
+                  withInterventionCount: totalInt,
+                  kpiPercentage: Math.round(overallPct * 10) / 10,
+                  isAchieved: overallPct >= 80.0,
+                  targetPercentage: 80.0
+                },
+                clinics: clinicsList,
+                patients
+              });
+              setError(null);
+            },
+            error: (err) => {
+              setError(err.message || 'Gagal menghurai data CSV.');
+            }
+          });
+        } catch (err) {
+          setError(err.message || 'Gagal memuat turun data dari Google Sheets.');
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      useEffect(() => {
+        fetchClientData();
+      }, []);
+
+      if (loading) {
+        return (
+          <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-700">
+            <div className="w-12 h-12 rounded-full border-4 border-slate-100 border-t-sky-500 animate-spin mb-4"></div>
+            <p className="font-semibold text-slate-850 text-sm">Menghubungi Google Sheet...</p>
+            <p className="text-slate-400 text-xs mt-1">Sistem Pemantauan MIMO Kedah terbina...</p>
+          </div>
+        );
+      }
+
+      if (error) {
+        return (
+          <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-750">
+            <div className="bg-white p-8 rounded-none border border-slate-200 shadow-sm max-w-sm w-full text-center">
+              <div className="w-12 h-12 bg-red-50 text-red-500 rounded-none border border-red-200 flex items-center justify-center mx-auto mb-4">
+                <Icon name="x" className="w-6 h-6" />
+              </div>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-2 font-display">Talian Gagal</h3>
+              <p className="text-xs text-slate-500 mb-6">{error}</p>
+              <button onClick={fetchClientData} className="w-full py-2 px-4 bg-sky-500 hover:bg-sky-600 text-black font-black uppercase text-xs tracking-wider rounded-none">
+                Cuba Semula
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      // Safe state mapping
+      const { overall, clinics, patients } = data;
+
+      // Primary filter algorithm
+      const filteredPatients = patients.filter(p => {
+        const matchesSearch = p.nama.toLowerCase().includes(searchTerm.toLowerCase()) || p.noId.includes(searchTerm) || p.noTelefon.includes(searchTerm);
+        const matchesClinic = selectedClinic === 'all' || p.fasiliti.toUpperCase().includes(selectedClinic.toUpperCase());
+        const matchesBmi = selectedBmiClass === 'all' || p.baseline.bmiKategori.toUpperCase() === selectedBmiClass.toUpperCase();
+        const matchesGender = selectedGender === 'all' || p.jantina.toUpperCase() === selectedGender.toUpperCase();
+        
+        let matchesInt = true;
+        if (selectedIntervention === 'mnt') matchesInt = p.interventions.mnt;
+        else if (selectedIntervention === 'senaman') matchesInt = p.interventions.senaman;
+        else if (selectedIntervention === 'tingkah') matchesInt = p.interventions.tingkahLaku;
+        else if (selectedIntervention === 'ubat') matchesInt = (p.interventions.farmakologi && p.interventions.farmakologi !== 'TIDAK BERKAITAN' && p.interventions.farmakologi !== 'TIDAK');
+
+        return matchesSearch && matchesClinic && matchesBmi && matchesGender && matchesInt;
+      });
+
+      // Stats pre-computes
+      const bmiCounts = {};
+      patients.forEach(p => {
+        const cat = p.baseline.bmiKategori || 'Kategori Tidak Diisytiharkan';
+        bmiCounts[cat] = (bmiCounts[cat] || 0) + 1;
+      });
+      const bmiChartData = Object.keys(bmiCounts).map(k => ({ name: k, value: bmiCounts[k] }));
+
+      const clinicComorb = {
+        KKBAS: { diabetes: 0, hipertensi: 0, dislipidemia: 0, count: 0 },
+        KKBSP: { diabetes: 0, hipertensi: 0, dislipidemia: 0, count: 0 }
+      };
+      patients.forEach(p => {
+        const s = CLINIC_SHORTS[p.fasiliti] || 'KKBAS';
+        if (clinicComorb[s]) {
+          clinicComorb[s].count++;
+          if (p.comorbidities.diabetes) clinicComorb[s].diabetes++;
+          if (p.comorbidities.hipertensi) clinicComorb[s].hipertensi++;
+          if (p.comorbidities.dislipidemia) clinicComorb[s].dislipidemia++;
+        }
+      });
+      const comorbidityChartData = Object.keys(clinicComorb).map(k => ({
+        clinic: k,
+        'Diabetes': clinicComorb[k].diabetes,
+        'Hipertensi': clinicComorb[k].hipertensi,
+        'Dislipidemia': clinicComorb[k].dislipidemia
+      }));
+
+      // Age categorization
+      const ageBrackets = { 'Bawah 30': 0, '30 - 39': 0, '40 - 49': 0, '50 ke atas': 0 };
+      patients.forEach(p => {
+        if (p.umur < 30) ageBrackets['Bawah 30']++;
+        else if (p.umur <= 39) ageBrackets['30 - 39']++;
+        else if (p.umur <= 49) ageBrackets['40 - 49']++;
+        else ageBrackets['50 ke atas']++;
+      });
+
+      const maleCount = patients.filter(p => p.jantina.toUpperCase() === 'LELAKI').length;
+      const femaleCount = patients.length - maleCount;
+
+      const handleUnlock = (e) => {
+        e.preventDefault();
+        if (passwordInput === 'mimo2026') {
+          setIsUnlocked(true);
+          setPasswordError(null);
+        } else {
+          setPasswordError('Kata laluan salah. Sila hubungi Pentadbir MIMO Kedah.');
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased flex flex-col">
+          
+          {/* Header */}
+          <header className="bg-black text-white sticky top-0 z-40 border-b-4 border-sky-500 shadow-md">
+            <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <MimoVectorLogo />
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="px-1.5 py-0.5 bg-sky-950 text-sky-350 font-black text-[9px] uppercase tracking-widest border border-sky-900/60 font-mono">
+                      PROGRAM MIMO KEDAH
+                    </span>
+                    <span className="text-slate-700 text-xs">•</span>
+                    <span className="text-[10px] font-bold text-sky-400 uppercase tracking-widest font-mono">
+                      State of Kedah
+                    </span>
+                  </div>
+                  <h1 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight font-display">
+                    Sistem Pemantauan MIMO Kedah
+                  </h1>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <button onClick={fetchClientData} className="flex items-center gap-2 px-4 py-2 bg-sky-450 hover:bg-sky-500 text-black font-black uppercase text-xs font-display tracking-widest transition-all">
+                  <Icon name="refresh" className="w-3.5 h-3.5 animate-pulse" />
+                  SEGARKAN DATA
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <div className="flex-1 max-w-7xl w-full mx-auto flex flex-col md:flex-row">
+            
+            {/* Sidebar with Navigation Tabs */}
+            <aside className="w-full md:w-64 bg-black text-slate-350 p-4 border-r border-slate-900 shrink-0">
+              <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase px-3 mb-4">NAVIGASI SISTEM</p>
+              <nav className="space-y-1">
+                <button 
+                  onClick={() => setActivePage('page1')} 
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none text-left transition-all ${activePage === 'page1' ? 'bg-sky-600 text-white border-l-4 border-sky-450 font-extrabold' : 'hover:bg-slate-900 hover:text-white border-l-4 border-transparent'}`}
+                >
+                  <Icon name="trending" className="w-4 h-4 text-sky-450" />
+                  Dashboard MIMO
+                </button>
+                <button 
+                  onClick={() => setActivePage('page2')} 
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none text-left transition-all ${activePage === 'page2' ? 'bg-sky-600 text-white border-l-4 border-sky-450 font-extrabold' : 'hover:bg-slate-900 hover:text-white border-l-4 border-transparent'}`}
+                >
+                  <Icon name="users" className="w-4 h-4 text-sky-450" />
+                  Direktori Pesakit (OSA)
+                </button>
+                <a 
+                  href="https://docs.google.com/spreadsheets/d/1Zn7JHkTrfol2G0Sl4b0oazryk2Syhbp0Xj74HPD1PXU/edit?usp=sharing" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none text-left transition-all hover:bg-slate-900 hover:text-white text-slate-400 border-l-4 border-transparent"
+                >
+                  <Icon name="shield" className="w-4 h-4 text-sky-450" />
+                  Akses Google Sheet
+                </a>
+              </nav>
+            </aside>
+
+            {/* Content Body */}
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
+              
+              {activePage === 'page1' ? (
+                /* --- DASHBOARD VIEW --- */
+                <React.Fragment>
+                  
+                  {/* Status KPI summary cards */}
+                  <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* Gauge */}
+                    <div className="bg-black p-5 rounded-none shadow-sm flex flex-col justify-between text-white border-b-8 border-sky-500 border border-slate-900 relative">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">PENCAPAIAN NEGERI</span>
+                          <span className="text-[9px] font-bold bg-sky-950 text-sky-400 px-2 py-0.5 border border-sky-900/50 uppercase">SA-80%</span>
+                        </div>
+                        <div className="flex items-baseline justify-between mt-2">
+                          <span className="text-4xl font-black text-sky-450 font-mono">{overall.kpiPercentage}%</span>
+                          <span className="text-[8px] font-black bg-sky-950 text-sky-350 px-1.5 py-0.5 uppercase border border-sky-900/50">MELEPASI SASARAN</span>
+                        </div>
+                        
+                        <div className="my-3 p-2 bg-slate-950 border border-sky-950 font-mono text-[9px] text-slate-400">
+                          <span className="font-bold text-sky-400 uppercase tracking-widest text-[8px] block mb-1">Formula Pengiraan KPI:</span>
+                          <div className="border-b border-slate-900 pb-0.5 truncate">Total Penerima Intervensi (≥1)</div>
+                          <div className="pt-0.5 truncate">Jumlah Pendaftaran MIMO Kedah</div>
+                          <div className="text-white font-bold mt-1 text-[9px] text-right">
+                            = ({overall.withInterventionCount} / {overall.registeredCount}) = {overall.kpiPercentage}%
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[9px] text-slate-400 uppercase font-mono tracking-wider pt-2 border-t border-slate-920">STATUS: CEMERLANG</p>
+                    </div>
+
+                    {/* Total Registered */}
+                    <div className="bg-white border border-slate-200 p-5 rounded-none shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">BERDAFTAR</div>
+                          <Icon name="users" className="w-5 h-5 text-slate-400" />
+                        </div>
+                        <div className="text-3xl font-black text-slate-900 font-mono mt-4 leading-none">{overall.registeredCount} <span className="text-sm font-bold text-slate-400 uppercase">Orang</span></div>
+                        <p className="text-[11px] text-slate-500 mt-2 font-medium">Saringan rasmi peserta program intervensi MIMO.</p>
+                      </div>
+                      <div className="h-1 bg-slate-900 w-full mt-4"></div>
+                    </div>
+
+                    {/* With Intervention */}
+                    <div className="bg-white border border-slate-200 p-5 rounded-none shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">ADA INTERVENSI</div>
+                          <Icon name="shield" className="w-5 h-5 text-slate-400" />
+                        </div>
+                        <div className="text-3xl font-black text-slate-900 font-mono mt-4 leading-none">{overall.withInterventionCount} <span className="text-sm font-bold text-slate-400 uppercase">Peserta</span></div>
+                        <p className="text-[11px] text-slate-500 mt-2 font-medium">Menyelesaikan sekurang-kurangnya satu intervensi.</p>
+                      </div>
+                      <div className="h-1 w-full bg-slate-150 mt-4">
+                        <div className="h-full bg-sky-500" style={{ width: `${overall.kpiPercentage}%` }}></div>
+                      </div>
+                    </div>
+
+                    {/* Facility counts */}
+                    <div className="bg-white border border-slate-200 p-5 rounded-none shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">FASILITI</div>
+                          <Icon name="map" className="w-5 h-5 text-slate-400" />
+                        </div>
+                        <div className="text-3xl font-black text-slate-900 font-mono mt-4 leading-none">02 <span className="text-sm font-bold text-slate-400 uppercase">Klinik</span></div>
+                        <p className="text-[11px] text-slate-500 mt-2 font-medium">KKBAS & KKBSP sebagai paksi penilai Kedah.</p>
+                      </div>
+                      <div className="flex gap-1 mt-4">
+                        <div className="h-1 flex-1 bg-sky-500"></div>
+                        <div className="h-1 flex-1 bg-sky-950"></div>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Comparisons Clinics Row */}
+                  <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {clinics.map((clinic, index) => {
+                      const isKKBAS = clinic.name.includes("Alor Setar");
+                      return (
+                        <div key={index} className="bg-white border border-slate-200 shadow-sm rounded-none">
+                          <div className="p-5 bg-black text-white border-b-4 border-sky-450 flex items-start justify-between">
+                            <div>
+                              <span className="px-2 py-0.5 bg-sky-950 text-sky-350 border border-sky-900 font-black text-[9px] tracking-widest uppercase font-mono block w-max mb-1.5">
+                                {isKKBAS ? 'KK BANDAR ALOR SETAR (KKBAS)' : 'KK BANDAR SG. PETANI (KKBSP)'}
+                              </span>
+                              <h3 className="text-base font-black uppercase text-white font-display">{clinic.name}</h3>
+                              <p className="text-[9px] text-slate-400 font-mono tracking-tight mt-0.5">{isKKBAS ? 'kk_bandaralorsetar@moh.gov.my' : 'kk_bandarsungaipetani@moh.gov.my'}</p>
+                            </div>
+                            <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 text-center shrink-0">
+                              <p className="text-[9px] font-extrabold text-sky-400">KPI KK</p>
+                              <p className="text-lg font-black font-mono text-white mt-0.5 leading-none">{clinic.kpiPercentage}%</p>
+                            </div>
+                          </div>
+
+                          <div className="p-5 space-y-4">
+                            <div>
+                              <div className="flex justify-between text-xs font-bold text-slate-700 uppercase tracking-tight mb-1">
+                                <span>KPI Sasaran 80%</span>
+                                <span className="font-mono text-slate-900">{clinic.withInterventionCount} / {clinic.registeredCount} peserta</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-2 border border-slate-200 rounded-none overflow-hidden">
+                                <div className="h-full bg-sky-500" style={{ width: `${clinic.kpiPercentage}%` }}></div>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div className="bg-slate-50 border border-slate-200 p-2.5 flex items-center justify-between">
+                                <span className="text-[10px] text-slate-500 font-black uppercase">Diet MNT</span>
+                                <strong className="font-mono text-slate-900">{clinic.mntCount} ({Math.round(clinic.mntCount / clinic.registeredCount * 100)}%)</strong>
+                              </div>
+                              <div className="bg-slate-50 border border-slate-200 p-2.5 flex items-center justify-between">
+                                <span className="text-[10px] text-slate-500 font-black uppercase">Senaman</span>
+                                <strong className="font-mono text-slate-900">{clinic.senamanCount} ({Math.round(clinic.senamanCount / clinic.registeredCount * 100)}%)</strong>
+                              </div>
+                              <div className="bg-slate-50 border border-slate-200 p-2.5 flex items-center justify-between">
+                                <span className="text-[10px] text-slate-500 font-black uppercase">Minda Minda</span>
+                                <strong className="font-mono text-slate-900">{clinic.tingkahlakuCount} ({Math.round(clinic.tingkahlakuCount / clinic.registeredCount * 100)}%)</strong>
+                              </div>
+                              <div className="bg-slate-50 border border-slate-200 p-2.5 flex items-center justify-between">
+                                <span className="text-[10px] text-slate-500 font-black uppercase">Ubat</span>
+                                <strong className="font-mono text-slate-900">{clinic.farmakologiCount} ({Math.round(clinic.farmakologiCount / clinic.registeredCount * 100)}%)</strong>
+                              </div>
+                            </div>
+
+                            <div className="p-3 bg-slate-50 border-l-4 border-sky-450 text-[11px] text-slate-650 leading-relaxed font-medium">
+                              {isKKBAS 
+                                ? "KKBAS menumpukan penuh pendekatan gaya hidup (Diet MNT dan Latihan senaman fizikal)."
+                                : "KKBSP menerapkan intervensi multipendekatan 360 darjah berserta ubat-ubatan khusus."
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </section>
+
+                  {/* SVG Charts section */}
+                  <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div className="bg-white border border-slate-200 p-5 rounded-none lg:col-span-7 flex flex-col justify-between">
+                      <div>
+                        <div className="border-b border-slate-150 pb-3 mb-4">
+                          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest font-display">Graf Profil Komorbiditi</h3>
+                          <p className="text-[10px] text-slate-500 mt-0.5">Diabetes, Hipertensi, dan Dislipidemia mengikut saringan baseline pesakit berdaftar.</p>
+                        </div>
+                        <ComorbidityBarChart data={comorbidityChartData} />
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-slate-200 p-5 rounded-none lg:col-span-5 flex flex-col justify-between">
+                      <div>
+                        <div className="border-b border-slate-150 pb-3 mb-4">
+                          <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest font-display">Kompilasi Jisim BMI Kategori</h3>
+                          <p className="text-[10px] text-slate-500 mt-0.5">Komposisi saringan obesiti tahap II dan obesiti tahap III.</p>
+                        </div>
+                        <BmiDonutChart data={bmiChartData} total={patients.length} />
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Demographics Area */}
+                  <section className="bg-white border border-slate-200 p-5 rounded-none">
+                    <div className="border-b border-slate-150 pb-3 mb-4">
+                      <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest font-display">Analisis Profil Demografi</h3>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Analisis perbandingan jantina dan kelompok umur peserta Kedah.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 font-mono">Pecahan Umur</p>
+                        <div className="space-y-3">
+                          {Object.keys(ageBrackets).map((b, idx) => {
+                            const p = Math.round(ageBrackets[b] / patients.length * 100);
+                            return (
+                              <div key={idx}>
+                                <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                                  <span>{b} Tahun</span>
+                                  <span className="font-mono text-slate-900">{ageBrackets[b]} Pesakit ({p}%)</span>
+                                </div>
+                                <div className="w-full bg-slate-100 h-1.5 border border-slate-200">
+                                  <div className="h-full bg-slate-950" style={{ width: `${p}%` }}></div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col justify-between">
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 font-mono">Pembagian Jantina</p>
+                          <div className="grid grid-cols-2 gap-3 mb-4">
+                            <div className="bg-slate-50 border border-slate-200 p-3">
+                              <span className="text-[10px] font-black text-blue-800 uppercase">LELAKI</span>
+                              <p className="text-2xl font-black font-display font-mono text-slate-900 leading-none mt-2">{maleCount}</p>
+                              <p className="text-[9px] text-slate-400 font-mono uppercase mt-1">Peserta ({Math.round(maleCount/patients.length*100)}%)</p>
+                            </div>
+                            <div className="bg-slate-50 border border-slate-200 p-3">
+                              <span className="text-[10px] font-black text-rose-800 uppercase">PEREMPUAN</span>
+                              <p className="text-2xl font-black font-display font-mono text-slate-900 leading-none mt-2">{femaleCount}</p>
+                              <p className="text-[9px] text-slate-400 font-mono uppercase mt-1">Peserta ({Math.round(femaleCount/patients.length*100)}%)</p>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-slate-600 font-medium leading-relaxed bg-slate-50/50 p-3 border border-slate-150">
+                          Data membuktikan majoriti pendaftar merupakan golongan <strong className="text-slate-905">Perempuan ({Math.round(femaleCount/patients.length*100)}%)</strong>, tertumpu pada zon umur produktif <strong className="text-slate-905">40 hingga 49 Tahun</strong>.
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+
+                </React.Fragment>
+              ) : (
+                /* --- PROTECTED DIRECTORY --- */
+                <div className="space-y-6">
+                  {!isUnlocked ? (
+                    <div className="bg-white border border-slate-200 p-8 flex flex-col items-center justify-center text-center max-w-sm mx-auto my-12">
+                      <div className="w-12 h-12 bg-red-50 border border-red-200 flex items-center justify-center text-red-650 rounded-none mb-3">
+                        <Icon name="lock" className="w-6 h-6 text-red-600" />
+                      </div>
+                      <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-1 font-display">AKSES SULIT (OSA)</h3>
+                      <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+                        Khas Kakitangan Perubatan MIMO Kedah sahaja. Borang saringan rawatan pesakit dilindungi di bawah undang-undang data OSA.
+                      </p>
+
+                      <form onSubmit={handleUnlock} className="w-full space-y-4">
+                        <input 
+                          type="password" 
+                          placeholder="Masukkan Kata Laluan..." 
+                          value={passwordInput} 
+                          onChange={(e) => setPasswordInput(e.target.value)}
+                          className="w-full text-xs text-center py-2.5 border border-slate-300 rounded-none focus:outline-none focus:border-red-500 font-mono"
+                          autoFocus
+                        />
+                        {passwordError && <p className="text-[10px] text-red-650 font-bold bg-red-50 border border-red-200 p-1.5 uppercase font-mono">{passwordError}</p>}
+                        <button type="submit" className="w-full py-2 bg-red-600 hover:bg-red-750 text-white font-extrabold uppercase text-xs tracking-wider rounded-none transition-all">
+                          Sahkan Akses
+                        </button>
+                      </form>
+                      <p className="text-[10px] font-mono text-slate-400 mt-6 leading-none">Kata laluan demo: <strong className="text-sky-600 font-bold">mimo2026</strong></p>
+                    </div>
+                  ) : (
+                    /* --- UNLOCKED PATIENT DIRECTORY --- */
+                    <React.Fragment>
+                      {/* Live Data Link banner */}
+                      <div className="bg-slate-900 border-l-4 border-amber-500 p-5 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <span className="px-1.5 py-0.5 bg-amber-950 text-amber-500 border border-amber-900 text-[9px] font-black tracking-widest uppercase font-mono">PANGKALAN DATA LIVE</span>
+                          <h4 className="text-sm font-black uppercase text-white tracking-tight mt-1 font-display">Pautan Spreadsheet Hospital & Klinik</h4>
+                          <p className="text-xs text-slate-400 max-w-lg mt-0.5">Integrasi terus Google Sheets MMO. Hubungkan data mentah borang bagi merekod & menyunting terus pesakit.</p>
+                        </div>
+                        <a href="https://docs.google.com/spreadsheets/d/1Zn7JHkTrfol2G0Sl4b0oazryk2Syhbp0Xj74HPD1PXU/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider font-mono self-start sm:self-center">
+                          Buka Google Sheet
+                        </a>
+                      </div>
+
+                      <div className="bg-white border border-slate-200 rounded-none shadow-sm overflow-hidden">
+                        
+                        {/* Interactive Table Controls */}
+                        <div className="p-5 bg-slate-50 border-b border-slate-200 space-y-4">
+                          <div>
+                            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest font-display">Direktori Pemantauan Rawatan ({filteredPatients.length} / {patients.length})</h3>
+                            <p className="text-[10px] text-slate-500 mt-0.5">Cari maklumat khusus pendaftaran rujukan, ukuran baseline, saringan minda DASS.</p>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+                            <div className="relative">
+                              <input 
+                                type="text" 
+                                placeholder="Cari Nama / No. KP..." 
+                                value={searchTerm} 
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full text-xs py-2 pl-7 pr-2 border border-slate-300 bg-white"
+                              />
+                              <Icon name="search" className="w-3.5 h-3.5 absolute left-2 top-2.5 text-slate-400" />
+                            </div>
+
+                            <select value={selectedClinic} onChange={(e) => setSelectedClinic(e.target.value)} className="text-xs py-2 px-2 border border-slate-300 bg-white">
+                              <option value="all">Klinik: Semua</option>
+                              <option value="ALOR SETAR">KKBAS</option>
+                              <option value="SUNGAI PETANI">KKBSP</option>
+                            </select>
+
+                            <select value={selectedBmiClass} onChange={(e) => setSelectedBmiClass(e.target.value)} className="text-xs py-2 px-2 border border-slate-300 bg-white">
+                              <option value="all">BMI: Semua</option>
+                              <option value="OBES II">Obes II</option>
+                              <option value="OBES III">Obes III</option>
+                            </select>
+
+                            <select value={selectedGender} onChange={(e) => setSelectedGender(e.target.value)} className="text-xs py-2 px-2 border border-slate-300 bg-white">
+                              <option value="all">Jantina: Semua</option>
+                              <option value="LELAKI">Lelaki</option>
+                              <option value="PEREMPUAN">Perempuan</option>
+                            </select>
+
+                            <select value={selectedIntervention} onChange={(e) => setSelectedIntervention(e.target.value)} className="text-xs py-2 px-2 border border-slate-300 bg-white">
+                              <option value="all">Intervensi: Semua</option>
+                              <option value="mnt">Diet MNT</option>
+                              <option value="senaman">Bersenam</option>
+                              <option value="tingkah">Tingkah Laku</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Patient Grid/Table */}
+                        <div className="overflow-x-auto">
+                          {filteredPatients.length === 0 ? (
+                            <div className="p-8 text-center text-slate-500">
+                              <Icon name="info" className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                              <p className="text-xs font-semibold">Tiada Pesakit Ditemui</p>
+                            </div>
+                          ) : (
+                            <table className="w-full text-left font-sans border-collapse text-xs">
+                              <thead>
+                                <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 uppercase tracking-wider text-[9px] font-black">
+                                  <th className="py-2.5 px-3">Nama</th>
+                                  <th className="py-2.5 px-3">Klinik</th>
+                                  <th className="py-2.5 px-3">KP / Umur</th>
+                                  <th className="py-2.5 px-3">Baseline BMI</th>
+                                  <th className="py-2.5 px-3 text-center">Intervensi</th>
+                                  <th className="py-2.5 px-3 text-right">Profil</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-200">
+                                {filteredPatients.map((p, idx) => {
+                                  const cS = CLINIC_SHORTS[p.fasiliti] || "KKBAS";
+                                  return (
+                                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                      <td className="py-3 px-3">
+                                        <div className="flex items-center gap-2">
+                                          <div className={`w-6 h-6 border flex items-center justify-center font-black text-xs ${p.jantina.toUpperCase() === 'LELAKI' ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+                                            {p.nama.charAt(0)}
+                                          </div>
+                                          <div>
+                                            <p className="font-bold text-slate-900 uppercase text-xs">{p.nama}</p>
+                                            <p className="text-[10px] text-slate-400 font-mono mt-0.5">{p.jantina} • Tel: {p.noTelefon}</p>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="py-3 px-3">
+                                        <span className="px-1.5 py-0.5 bg-sky-50 text-sky-850 font-black text-[9px] border border-sky-200 uppercase">{cS}</span>
+                                      </td>
+                                      <td className="py-3 px-3 font-semibold">
+                                        <p className="font-mono text-xs">{p.noId}</p>
+                                        <p className="text-[10px] text-slate-400 font-mono">{p.umur} Tahun</p>
+                                      </td>
+                                      <td className="py-3 px-3">
+                                        <div className="flex items-baseline gap-1 font-bold text-slate-900">
+                                          <span>{p.baseline.bmi}</span>
+                                          <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider">{p.baseline.bmiKategori}</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 font-mono">{p.baseline.berat} KG ({p.baseline.tinggi} cm)</p>
+                                      </td>
+                                      <td className="py-3 px-3">
+                                        <div className="flex items-center justify-center gap-3">
+                                          <div className="flex flex-col items-center">
+                                            <span className="text-[8px] text-slate-400 font-bold mb-0.5">MNT</span>
+                                            {p.interventions.mnt ? <Icon name="check" className="w-3.5 h-3.5 text-sky-500" /> : <Icon name="x" className="w-3.5 h-3.5 text-slate-200" />}
+                                          </div>
+                                          <div className="flex flex-col items-center">
+                                            <span className="text-[8px] text-slate-400 font-bold mb-0.5">Senam</span>
+                                            {p.interventions.senaman ? <Icon name="check" className="w-3.5 h-3.5 text-sky-500" /> : <Icon name="x" className="w-3.5 h-3.5 text-slate-200" />}
+                                          </div>
+                                          <div className="flex flex-col items-center">
+                                            <span className="text-[8px] text-slate-400 font-bold mb-0.5">Minda</span>
+                                            {p.interventions.tingkahLaku ? <Icon name="check" className="w-3.5 h-3.5 text-sky-500" /> : <Icon name="x" className="w-3.5 h-3.5 text-slate-200" />}
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="py-3 px-3 text-right">
+                                        <button onClick={() => setSelectedPatient(p)} className="py-1 px-2.5 bg-white border border-slate-350 text-slate-800 hover:border-sky-500 text-[10px] font-bold font-mono uppercase tracking-wide">
+                                          PROFIL
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          )}
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  )}
+                </div>
+              )}
+            </main>
+          </div>
+
+          {/* Modal overlay window */}
+          {selectedPatient && (
+            <div className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs" onClick={() => setSelectedPatient(null)}>
+              <div className="bg-white rounded-none w-full max-w-xl shadow-xl relative border border-slate-350" onClick={(e) => e.stopPropagation()}>
+                <div className="bg-black border-b-4 border-sky-500 p-5 text-white relative">
+                  <button onClick={() => setSelectedPatient(null)} className="absolute top-4 right-4 text-white font-bold text-xs p-1 bg-slate-900 border border-slate-800">✕</button>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-slate-900 border border-slate-800 text-sky-350 font-black text-xl flex items-center justify-center">
+                      {selectedPatient.nama.charAt(0)}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-black uppercase bg-sky-950 text-sky-305 border border-sky-900 px-2 py-0.5">Saringan Berdaftar</span>
+                      <h3 className="text-base font-black uppercase text-white mt-1 leading-none font-display">{selectedPatient.nama}</h3>
+                      <p className="text-[10px] text-slate-400 font-mono mt-1 font-display tracking-wide uppercase">{selectedPatient.fasiliti}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 border-b border-slate-150 pb-3 font-mono text-slate-700">
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none">NO. KP</span>
+                      <strong className="text-xs text-slate-900">{selectedPatient.noId}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none">UMUR / JEX</span>
+                      <strong className="text-xs text-slate-900 uppercase">{selectedPatient.umur} T / {selectedPatient.jantina}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none">BANGSA</span>
+                      <strong className="text-xs text-slate-900 uppercase">{selectedPatient.bangsa}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none">TELEFON</span>
+                      <strong className="text-xs text-slate-900">{selectedPatient.noTelefon}</strong>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] pb-1 border-b border-sky-450 font-black uppercase text-slate-500 mb-2 font-display tracking-widest">Ukuran Klinikal (Baseline)</h4>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-slate-550/5 border border-slate-200 p-2.5">
+                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-wide">UKURAN BMI</span>
+                        <p className="text-lg font-black font-mono text-slate-800 mt-0.5">{selectedPatient.baseline.bmi} KG/m²</p>
+                        <p className="text-[9px] text-slate-500 font-extrabold uppercase mt-0.5">{selectedPatient.baseline.bmiKategori}</p>
+                        <p className="text-[9px] text-slate-400 mt-1">Berat {selectedPatient.baseline.berat} KG | {selectedPatient.baseline.tinggi} CM</p>
+                      </div>
+                      <div className="bg-slate-550/5 border border-slate-200 p-2.5">
+                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-wide">TEKANAN DARAH (BP)</span>
+                        <p className="text-lg font-black font-mono text-slate-800 mt-0.5">{selectedPatient.baseline.systolic} / {selectedPatient.baseline.diastolic}</p>
+                        <p className="text-[9px] text-slate-500 font-semibold mt-0.5">Sistolik/Diastolik (mmHg)</p>
+                      </div>
+                      <div className="bg-slate-550/5 border border-slate-200 p-2.5">
+                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-wide">UKUR PINGGANG</span>
+                        <p className="text-lg font-black font-mono text-slate-800 mt-0.5">{selectedPatient.baseline.waist || 'Tiada Rekod'} CM</p>
+                        <p className="text-[9px] text-slate-400 mt-1">Saringan baseline bahagian atas.</p>
+                      </div>
+                      <div className="bg-slate-550/5 border border-slate-200 p-2.5">
+                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-wide">MENTAL DASS</span>
+                        <p className="text-xs font-black text-slate-850 mt-1 truncate">{selectedPatient.baseline.mentalStatus || 'TIADA SARINGAN'}</p>
+                        <p className="text-[10px] text-rose-800 font-bold uppercase mt-1 leading-tight">{selectedPatient.baseline.mentalResult || 'Lepas pemeriksaan'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] pb-1 border-b border-sky-450 font-black uppercase text-slate-500 mb-2 font-display tracking-widest">Komorbiditi Sedia Ada</h4>
+                    <div className="flex flex-wrap gap-1.5 text-[10px] font-bold uppercase font-mono tracking-tight text-slate-700">
+                      <span className={`px-2 py-1 border ${selectedPatient.comorbidities.diabetes ? 'bg-indigo-50 border-indigo-200 text-indigo-850' : 'bg-slate-100 border-slate-150 text-slate-400'}`}>
+                        {selectedPatient.comorbidities.diabetes ? '✓' : '✗'} Diabetes (Kencing Manis)
+                      </span>
+                      <span className={`px-2 py-1 border ${selectedPatient.comorbidities.hipertensi ? 'bg-red-50 border-red-200 text-red-850' : 'bg-slate-100 border-slate-150 text-slate-400'}`}>
+                        {selectedPatient.comorbidities.hipertensi ? '✓' : '✗'} Hipertensi (Darah Tinggi)
+                      </span>
+                      <span className={`px-2 py-1 border ${selectedPatient.comorbidities.dislipidemia ? 'bg-emerald-50 border-emerald-200 text-emerald-850' : 'bg-slate-100 border-slate-150 text-slate-400'}`}>
+                        {selectedPatient.comorbidities.dislipidemia ? '✓' : '✗'} Dislipidemia (Kolesterol)
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] pb-1 border-b border-sky-450 font-black uppercase text-slate-500 mb-2 font-display tracking-widest">Status Penerimaan Intervensi</h4>
+                    <div className="space-y-1.5 text-xs">
+                      
+                      <div className="p-2.5 bg-slate-50 border border-slate-205 flex items-center justify-between">
+                        <div>
+                          <strong className="text-slate-850 block uppercase text-[10px]">Terapi Diet MNT</strong>
+                          <span className="text-[9px] text-slate-400 font-mono mt-0.5">Penyusunan pelan diet makanan KKM</span>
+                        </div>
+                        {selectedPatient.interventions.mnt ? (
+                          <div className="text-right">
+                            <span className="px-2 py-0.5 bg-sky-50 text-sky-850 border border-sky-200 text-[9px] font-black">LENGKAP</span>
+                            {selectedPatient.interventions.mntTarikh && <p className="text-[9px] text-slate-400 mt-0.5 font-mono">Daftar: {selectedPatient.interventions.mntTarikh}</p>}
+                          </div>
+                        ) : <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase">TIADA REKOD</span>}
+                      </div>
+
+                      <div className="p-2.5 bg-slate-50 border border-slate-205 flex items-center justify-between">
+                        <div>
+                          <strong className="text-slate-850 block uppercase text-[10px]">Rutin Senaman Fizikal</strong>
+                          <span className="text-[9px] text-slate-400 font-mono mt-0.5">Latihan kardiak 150 minit seminggu</span>
+                        </div>
+                        {selectedPatient.interventions.senaman ? (
+                          <div className="text-right">
+                            <span className="px-2 py-0.5 bg-sky-50 text-sky-850 border border-sky-200 text-[9px] font-black">LENGKAP</span>
+                            {selectedPatient.interventions.senamanTarikh && <p className="text-[9px] text-slate-400 mt-0.5 font-mono">Tarikh: {selectedPatient.interventions.senamanTarikh}</p>}
+                          </div>
+                        ) : <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase">TIADA REKOD</span>}
+                      </div>
+
+                      <div className="p-2.5 bg-slate-50 border border-slate-205 flex items-center justify-between">
+                        <div>
+                          <strong className="text-slate-850 block uppercase text-[10px]">Terapi Tingkah Laku</strong>
+                          <span className="text-[9px] text-slate-400 font-mono mt-0.5">Konseling minda & disiplin kesihatan</span>
+                        </div>
+                        {selectedPatient.interventions.tingkahLaku ? (
+                          <div className="text-right">
+                            <span className="px-2 py-0.5 bg-sky-50 text-sky-850 border border-sky-200 text-[9px] font-black">LENGKAP</span>
+                            {selectedPatient.interventions.tingkahLakuTarikh && <p className="text-[9px] text-slate-400 mt-0.5 font-mono">Tarikh: {selectedPatient.interventions.tingkahLakuTarikh}</p>}
+                          </div>
+                        ) : <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase">TIADA REKOD</span>}
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-100 p-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600 font-mono uppercase font-bold tracking-tight">
+                  <span>Tarikh Daftar: {selectedPatient.tarikhDaftar || 'Tiada Rekod'}</span>
+                  <span>Akaun: <strong className="text-slate-900">{selectedPatient.statusAkaun}</strong></span>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+  </script>
+</body>
+</html>
