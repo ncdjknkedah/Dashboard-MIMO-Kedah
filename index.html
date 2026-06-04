@@ -128,101 +128,147 @@
 
     // Native custom highly stylized responsive SVG Bar chart
     const ComorbidityBarChart = ({ data }) => {
-      const maxVal = 12;
-      const chartHeight = 200;
-      const groundY = 220;
+      const maxVal = 15;
+      const chartHeight = 160;
+      const groundY = 180;
 
       return (
-        <div className="w-full flex items-center justify-center p-2 font-mono">
-          <svg className="w-full h-64 max-w-md" viewBox="0 0 460 260" xmlns="http://www.w3.org/2000/svg">
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-              const y = 20 + ratio * chartHeight;
-              const label = Math.round((1 - ratio) * maxVal);
-              return (
-                <g key={i}>
-                  <line x1="40" y1={y} x2="440" y2={y} stroke="#f1f5f9" strokeWidth="1" />
-                  <text x="30" y={y + 4} fill="#94a3b8" fontSize="10" textAnchor="end">{label}</text>
-                </g>
-              );
-            })}
+        <div className="w-full flex flex-col items-center">
+          {/* Detailed Color Legend */}
+          <div className="flex flex-wrap justify-center gap-6 mb-4 text-[10px] sm:text-xs font-mono font-bold">
+            <div className="flex items-center gap-1.5">
+              <span className="w-3.5 h-3.5 bg-blue-500 block border border-blue-600"></span>
+              <span className="text-slate-700">Kencing Manis (Diabetes)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3.5 h-3.5 bg-red-500 block border border-red-600"></span>
+              <span className="text-slate-700">Darah Tinggi (Hipertensi)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3.5 h-3.5 bg-teal-600 block border border-teal-700"></span>
+              <span className="text-slate-700">Kolesterol (Dislipidemia)</span>
+            </div>
+          </div>
 
-            {data.map((item, idx) => {
-              const groupX = 60 + idx * 190;
-              const barWidth = 28;
-              const gap = 8;
+          <div className="w-full overflow-x-auto">
+            <svg className="w-full h-56 min-w-[320px] max-w-lg mx-auto" viewBox="0 0 460 210" xmlns="http://www.w3.org/2000/svg">
+              {/* Grid Lines & Labels */}
+              {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+                const y = 20 + ratio * chartHeight;
+                const label = Math.round((1 - ratio) * maxVal);
+                return (
+                  <g key={i}>
+                    <line x1="40" y1={y} x2="440" y2={y} stroke="#f1f5f9" strokeWidth="1" />
+                    <text x="30" y={y + 4} fill="#94a3b8" fontSize="10" textAnchor="end" className="font-mono">{label}</text>
+                  </g>
+                );
+              })}
 
-              const dm = item.Diabetes || 0;
-              const ht = item.Hipertensi || 0;
-              const dl = item.Dislipidemia || 0;
+              {data.map((item, idx) => {
+                const groupX = data.length === 1 ? 160 : (60 + idx * 190);
+                const barWidth = 26;
+                const gap = 6;
 
-              const dmH = (dm / maxVal) * chartHeight;
-              const htH = (ht / maxVal) * chartHeight;
-              const dlH = (dl / maxVal) * chartHeight;
+                const dm = item.Diabetes || 0;
+                const ht = item.Hipertensi || 0;
+                const dl = item.Dislipidemia || 0;
 
-              return (
-                <g key={idx}>
-                  <text x={groupX + barWidth * 1.5 + gap} y={groundY + 20} fill="#475569" fontSize="11" fontWeight="700" textAnchor="middle" className="font-sans font-display">
-                    {item.clinic === 'KKBAS' ? 'KK Bandar Alor Setar' : 'KK Sg. Petani'}
-                  </text>
-                  {/* Diabetes */}
-                  <rect x={groupX} y={groundY - dmH} width={barWidth} height={dmH} fill="#3b82f6" />
-                  <text x={groupX + barWidth/2} y={groundY - dmH - 6} fill="#0f172a" fontSize="9" fontWeight="900" textAnchor="middle">{dm}</text>
+                const dmH = (dm / maxVal) * chartHeight;
+                const htH = (ht / maxVal) * chartHeight;
+                const dlH = (dl / maxVal) * chartHeight;
 
-                  {/* Hipertensi */}
-                  <rect x={groupX + barWidth + gap} y={groundY - htH} width={barWidth} height={htH} fill="#ef4444" />
-                  <text x={groupX + barWidth + gap + barWidth/2} y={groundY - htH - 6} fill="#0f172a" fontSize="9" fontWeight="900" textAnchor="middle">{ht}</text>
+                return (
+                  <g key={idx}>
+                    <text x={groupX + barWidth * 1.5 + gap} y={groundY + 20} fill="#1e293b" fontSize="11" fontWeight="800" textAnchor="middle" className="font-sans font-display">
+                      {item.clinic === 'KKBAS' ? 'KK Bandar Alor Setar' : item.clinic === 'KKBSP' ? 'KK Sg. Petani' : item.clinic}
+                    </text>
+                    
+                    {/* Diabetes Bar & Data Label */}
+                    <rect x={groupX} y={groundY - dmH} width={barWidth} height={dmH} fill="#3b82f6" rx="1" />
+                    <text x={groupX + barWidth/2} y={groundY - dmH - 6} fill="#1e293b" fontSize="10" fontWeight="900" textAnchor="middle" className="font-mono">{dm}</text>
 
-                  {/* Dislipidemia */}
-                  <rect x={groupX + 2*barWidth + 2*gap} y={groundY - dlH} width={barWidth} height={dlH} fill="#0d9488" />
-                  <text x={groupX + 2*barWidth + 2*gap + barWidth/2} y={groundY - dlH - 6} fill="#0f172a" fontSize="9" fontWeight="900" textAnchor="middle">{dl}</text>
-                </g>
-              );
-            })}
-            <line x1="40" y1={groundY} x2="440" y2={groundY} stroke="#cbd5e1" strokeWidth="1.5" />
-          </svg>
+                    {/* Hipertensi Bar & Data Label */}
+                    <rect x={groupX + barWidth + gap} y={groundY - htH} width={barWidth} height={htH} fill="#ef4444" rx="1" />
+                    <text x={groupX + barWidth + gap + barWidth/2} y={groundY - htH - 6} fill="#1e293b" fontSize="10" fontWeight="900" textAnchor="middle" className="font-mono">{ht}</text>
+
+                    {/* Dislipidemia Bar & Data Label */}
+                    <rect x={groupX + 2*barWidth + 2*gap} y={groundY - dlH} width={barWidth} height={dlH} fill="#0d9488" rx="1" />
+                    <text x={groupX + 2*barWidth + 2*gap + barWidth/2} y={groundY - dlH - 6} fill="#1e293b" fontSize="10" fontWeight="900" textAnchor="middle" className="font-mono">{dl}</text>
+                  </g>
+                );
+              })}
+              <line x1="40" y1={groundY} x2="440" y2={groundY} stroke="#cbd5e1" strokeWidth="1.5" />
+            </svg>
+          </div>
         </div>
       );
     };
 
-    // Native circular SVG Donut Chart
+    // Native circular SVG Donut Chart with elegant side legend table & labels
     const BmiDonutChart = ({ data, total }) => {
       let accumulatedPercent = 0;
       const radius = 50;
       const strokeWidth = 14;
       const circumference = 2 * Math.PI * radius;
+      
+      const colors = ['#0284c7', '#0ea5e9', '#38bdf8', '#0c4a6e', '#64748b'];
 
       return (
-        <div className="relative w-full h-[220px] flex items-center justify-center">
-          <svg className="w-56 h-56 transform -rotate-90" viewBox="0 0 140 140">
-            {data.map((item, index) => {
-              const val = item.value;
-              const percent = val / (total || 1);
-              const strokeLength = percent * circumference;
-              const strokeOffset = circumference - (accumulatedPercent * circumference);
-              accumulatedPercent += percent;
+        <div className="w-full flex flex-col md:flex-row items-center justify-center gap-6 p-2">
+          {/* Centered Donut */}
+          <div className="relative w-44 h-44 shrink-0 select-none">
+            <svg className="w-full h-full transform -rotate-90 animate-fade-in" viewBox="0 0 140 140">
+              {data.map((item, index) => {
+                const val = item.value;
+                const percent = val / (total || 1);
+                const strokeLength = percent * circumference;
+                const strokeOffset = circumference - (accumulatedPercent * circumference);
+                accumulatedPercent += percent;
 
-              const colors = ['#38bdf8', '#0ea5e9', '#0284c7', '#0c4a6e', '#64748b'];
-              const color = colors[index % colors.length];
+                const color = colors[index % colors.length];
 
-              return (
-                <circle 
-                  key={index}
-                  cx="70"
-                  cy="70"
-                  r={radius}
-                  fill="transparent"
-                  stroke={color}
-                  strokeWidth={strokeWidth}
-                  strokeDasharray={`${strokeLength} ${circumference}`}
-                  strokeDashoffset={strokeOffset}
-                  style={{ transformOrigin: '70px 70px' }}
-                />
-              );
-            })}
-          </svg>
-          <div className="absolute inset-0 flex flex-col justify-center items-center pointer-events-none mt-[-4px]">
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">KUMPULAN</span>
-            <span className="text-sm font-black text-slate-900 tracking-wide font-display">OBESITI</span>
+                return (
+                  <circle 
+                    key={index}
+                    cx="70"
+                    cy="70"
+                    r={radius}
+                    fill="transparent"
+                    stroke={color}
+                    strokeWidth={strokeWidth}
+                    strokeDasharray={`${strokeLength} ${circumference}`}
+                    strokeDashoffset={strokeOffset}
+                    style={{ transformOrigin: '70px 70px' }}
+                  />
+                );
+              })}
+            </svg>
+            <div className="absolute inset-0 flex flex-col justify-center items-center pointer-events-none">
+              <span className="text-[8px] font-black text-slate-400 tracking-widest uppercase">JUMLAH</span>
+              <span className="text-xl font-black text-slate-900 tracking-tight font-display">{total}</span>
+              <span className="text-[8px] text-slate-500 font-bold uppercase">PESAKIT</span>
+            </div>
+          </div>
+
+          {/* Interactive Legend with exact data labels */}
+          <div className="flex-1 w-full space-y-1.5 text-xs">
+            {data.length === 0 ? (
+              <p className="text-slate-400 italic text-center text-xs">Tiada data BMI</p>
+            ) : (
+              data.map((item, idx) => {
+                const color = colors[idx % colors.length];
+                const percent = total > 0 ? Math.round((item.value / total) * 100) : 0;
+                return (
+                  <div key={idx} className="flex items-center justify-between border-b border-slate-100 pb-1 text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 block border-none shrink-0" style={{ backgroundColor: color }}></span>
+                      <strong className="uppercase tracking-tight text-[11px] text-slate-800">{item.name}</strong>
+                    </div>
+                    <span className="font-mono font-black text-slate-900 text-[11px]">{item.value} Orang ({percent}%)</span>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       );
@@ -244,13 +290,22 @@
       const [selectedBmiClass, setSelectedBmiClass] = useState('all');
       const [selectedGender, setSelectedGender] = useState('all');
       const [selectedIntervention, setSelectedIntervention] = useState('all');
-
+      const [selectedDaerah, setSelectedDaerah] = useState('all');
+      
       const [activePage, setActivePage] = useState('page1');
       const [isSidebarOpen, setIsSidebarOpen] = useState(true);
       const [isUnlocked, setIsUnlocked] = useState(false);
       const [passwordInput, setPasswordInput] = useState('');
       const [passwordError, setPasswordError] = useState(null);
       const [selectedPatient, setSelectedPatient] = useState(null);
+
+      useEffect(() => {
+        if (activePage !== 'page2') {
+          setIsUnlocked(false);
+          setPasswordInput('');
+          setPasswordError(null);
+        }
+      }, [activePage]);
 
       async function fetchClientData() {
         setLoading(true);
@@ -323,7 +378,8 @@
                     farmakologi: (row[65] || '').trim(),
                     farmakologiTarikh: (row[66] || '').trim(),
                     bariatrik: isBariatrik,
-                    bariatrikTarikh: (row[70] || '').trim()
+                    bariatrikTarikh: (row[70] || '').trim(),
+                    bariatrikRawatan: (row[69] || '').trim()
                   },
                   tarikhDaftar: (row[197] || '').trim(),
                   statusAkaun: (row[199] || 'AKTIF').trim()
@@ -458,7 +514,7 @@
       // Safe state mapping
       const { overall, clinics, patients } = data;
 
-      // Primary filter algorithm
+      // Primary filter algorithm for directory (retains original logic)
       const filteredPatients = patients.filter(p => {
         const matchesSearch = p.nama.toLowerCase().includes(searchTerm.toLowerCase()) || p.noId.includes(searchTerm) || p.noTelefon.includes(searchTerm);
         const matchesClinic = selectedClinic === 'all' || p.fasiliti.toUpperCase().includes(selectedClinic.toUpperCase());
@@ -474,19 +530,41 @@
         return matchesSearch && matchesClinic && matchesBmi && matchesGender && matchesInt;
       });
 
-      // Stats pre-computes
+      // Filter dynamically based on the selected Daerah/District for dashboard calculations
+      const activeDashboardPatients = patients.filter(p => {
+        if (selectedDaerah === 'all') return true;
+        const dStr = (p.daerah || '').trim().toUpperCase();
+        const fStr = (p.fasiliti || '').trim().toUpperCase();
+        if (selectedDaerah === 'KOTA SETAR') {
+          return dStr.includes('KOTA SETAR') || fStr.includes('ALOR SETAR') || dStr.includes('SETAR');
+        } else if (selectedDaerah === 'KUALA MUDA') {
+          return dStr.includes('KUALA MUDA') || fStr.includes('SUNGAI PETANI') || fStr.includes('SG. PETANI');
+        }
+        return dStr.includes(selectedDaerah.toUpperCase());
+      });
+
+      // Dynamic computations for the KPI Cards & Overview (supporting Daerah & Keseluruhan)
+      const dispRegisteredCount = activeDashboardPatients.length;
+      const dispWithInterventionCount = activeDashboardPatients.filter(p => 
+        p.interventions.mnt || p.interventions.senaman || p.interventions.tingkahLaku || 
+        (p.interventions.farmakologi && p.interventions.farmakologi !== 'TIDAK BERKAITAN' && p.interventions.farmakologi !== 'TIDAK')
+      ).length;
+      const dispKpiPercentage = dispRegisteredCount > 0 ? Math.round((dispWithInterventionCount / dispRegisteredCount * 100) * 10) / 10 : 0;
+
+      // Stats pre-computes for BMI based on district-filtered cohort
       const bmiCounts = {};
-      patients.forEach(p => {
+      activeDashboardPatients.forEach(p => {
         const cat = p.baseline.bmiKategori || 'Kategori Tidak Diisytiharkan';
         bmiCounts[cat] = (bmiCounts[cat] || 0) + 1;
       });
       const bmiChartData = Object.keys(bmiCounts).map(k => ({ name: k, value: bmiCounts[k] }));
 
+      // Comorbidities based on selected district cohort
       const clinicComorb = {
         KKBAS: { diabetes: 0, hipertensi: 0, dislipidemia: 0, count: 0 },
         KKBSP: { diabetes: 0, hipertensi: 0, dislipidemia: 0, count: 0 }
       };
-      patients.forEach(p => {
+      activeDashboardPatients.forEach(p => {
         const s = CLINIC_SHORTS[p.fasiliti] || 'KKBAS';
         if (clinicComorb[s]) {
           clinicComorb[s].count++;
@@ -495,24 +573,58 @@
           if (p.comorbidities.dislipidemia) clinicComorb[s].dislipidemia++;
         }
       });
-      const comorbidityChartData = Object.keys(clinicComorb).map(k => ({
-        clinic: k,
-        'Diabetes': clinicComorb[k].diabetes,
-        'Hipertensi': clinicComorb[k].hipertensi,
-        'Dislipidemia': clinicComorb[k].dislipidemia
-      }));
+      const comorbidityChartData = Object.keys(clinicComorb)
+        .filter(k => {
+          if (selectedDaerah === 'all') return true;
+          if (selectedDaerah === 'KOTA SETAR') return k === 'KKBAS';
+          if (selectedDaerah === 'KUALA MUDA') return k === 'KKBSP';
+          return true;
+        })
+        .map(k => ({
+          clinic: k,
+          'Diabetes': clinicComorb[k].diabetes,
+          'Hipertensi': clinicComorb[k].hipertensi,
+          'Dislipidemia': clinicComorb[k].dislipidemia
+        }));
 
-      // Age categorization
+      // Age groups based on district-filtered cohort (supporting Demografi)
       const ageBrackets = { 'Bawah 30': 0, '30 - 39': 0, '40 - 49': 0, '50 ke atas': 0 };
-      patients.forEach(p => {
+      activeDashboardPatients.forEach(p => {
         if (p.umur < 30) ageBrackets['Bawah 30']++;
         else if (p.umur <= 39) ageBrackets['30 - 39']++;
         else if (p.umur <= 49) ageBrackets['40 - 49']++;
         else ageBrackets['50 ke atas']++;
       });
 
-      const maleCount = patients.filter(p => p.jantina.toUpperCase() === 'LELAKI').length;
-      const femaleCount = patients.length - maleCount;
+      const maleCount = activeDashboardPatients.filter(p => p.jantina.toUpperCase() === 'LELAKI').length;
+      const femaleCount = activeDashboardPatients.length - maleCount;
+
+      // Lifestyle Interventions counts for district-filtered cohort
+      const lifestyleMntCount = activeDashboardPatients.filter(p => p.interventions.mnt).length;
+      const lifestyleSenamanCount = activeDashboardPatients.filter(p => p.interventions.senaman).length;
+      const lifestyleTingkahLakuCount = activeDashboardPatients.filter(p => p.interventions.tingkahLaku).length;
+
+      // Pharmacology counts (case-insensitive, excluding "TIDAK", "TIDAK BERKAITAN" etc.)
+      const farmakologiCounts = {};
+      activeDashboardPatients.forEach(p => {
+        let val = p.interventions.farmakologi;
+        if (!val) return;
+        val = val.trim().toUpperCase();
+        if (val === 'TIDAK' || val === 'TIDAK BERKAITAN' || val === '' || val === 'NO' || val === 'N/A' || val === 'NIL') return;
+        farmakologiCounts[val] = (farmakologiCounts[val] || 0) + 1;
+      });
+
+      // Bariatrik counts (excluding "TIDAK", "TIDAK BERKAITAN" etc.)
+      const bariatrikCounts = {};
+      activeDashboardPatients.forEach(p => {
+        if (p.interventions.bariatrik) {
+          let val = (p.interventions.bariatrikTarikh || 'Daftar / Proses').trim().toUpperCase();
+          if (val === 'TIDAK' || val === 'TIDAK BERKAITAN' || val === '' || val === 'NO' || val === 'NIL') {
+            val = 'DALAM PROSES / SELESAI';
+          }
+          bariatrikCounts[val] = (bariatrikCounts[val] || 0) + 1;
+        }
+      });
 
       const handleUnlock = (e) => {
         e.preventDefault();
@@ -549,20 +661,18 @@
               </div>
 
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-                  className="flex items-center gap-2 px-3  py-2 bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 font-bold uppercase text-[10px] sm:text-xs font-display tracking-widest transition-all"
-                  title="Klik untuk membuka/menutup menu"
-                >
-                  <svg className="w-3.5 h-3.5 text-sky-450" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    {isSidebarOpen ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M18.278 16.864a1 1 0 0 1-1.414 1.414L12 13.414l-4.864 4.864a1 1 0 1 1-1.414-1.414L10.586 12 5.722 7.136a1 1 0 1 1 1.414-1.414L12 10.586l4.864-4.864a1 1 0 1 1 1.414 1.414L13.414 12l4.864 4.864z" />
-                    ) : (
+                {!isSidebarOpen && (
+                  <button 
+                    onClick={() => setIsSidebarOpen(true)} 
+                    className="flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 font-bold uppercase text-[10px] sm:text-xs font-display tracking-widest transition-all"
+                    title="Klik untuk memaparkan menu"
+                  >
+                    <svg className="w-3.5 h-3.5 text-sky-450" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
-                    )}
-                  </svg>
-                  {isSidebarOpen ? 'Sembunyi Menu' : 'Papar Menu'}
-                </button>
+                    </svg>
+                    Papar Menu
+                  </button>
+                )}
                 <button onClick={fetchClientData} className="flex items-center gap-2 px-3 py-2 bg-sky-450 hover:bg-sky-500 text-black font-black uppercase text-[10px] sm:text-xs font-display tracking-widest transition-all">
                   <Icon name="refresh" className="w-3.5 h-3.5 animate-pulse" />
                   SEGARKAN DATA
@@ -576,7 +686,18 @@
             {/* Sidebar with Navigation Tabs */}
             {isSidebarOpen && (
               <aside className="w-full md:w-64 bg-black text-slate-350 p-4 border-r border-slate-900 shrink-0 select-none">
-                <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase px-3 mb-4">MENU UTAMA</p>
+                <div className="flex items-center justify-between px-3 mb-4">
+                  <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase">MENU UTAMA</p>
+                  <button 
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="p-1 hover:bg-slate-900 text-slate-400 hover:text-white transition-all hover:scale-115 rounded-sm"
+                    title="Sembunyi Menu"
+                  >
+                    <svg className="w-4 h-4 text-sky-450" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                </div>
                 <nav className="space-y-1.5">
                   {/* Pilihan 1: Sistem Pengisian Data MIMO */}
                   <a 
@@ -636,69 +757,102 @@
                 /* --- DASHBOARD VIEW --- */
                 <React.Fragment>
                   
+                  {/* PENAPISAN COHORT DAERAH & KESELURUHANN KEDAH */}
+                  <div className="bg-white border border-slate-200 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <span className="px-1.5 py-0.5 bg-slate-900 text-white font-mono font-black text-[9px] uppercase tracking-wider">SKOP COHORT MIMO KEDAH</span>
+                      <h2 className="text-sm font-black uppercase text-slate-800 tracking-tight mt-1">
+                        {selectedDaerah === 'all' ? 'Keseluruhan Negeri Kedah' : `Kawasan / Daerah: ${selectedDaerah}`}
+                      </h2>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { label: 'Seluruh Kedah', key: 'all' },
+                        { label: 'Daerah Kota Setar (KKBAS)', key: 'KOTA SETAR' },
+                        { label: 'Daerah Kuala Muda (KKBSP)', key: 'KUALA MUDA' }
+                      ].map((d) => (
+                        <button
+                          key={d.key}
+                          onClick={() => setSelectedDaerah(d.key)}
+                          className={`px-3 py-1.5 font-sans text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all rounded-xs cursor-pointer ${selectedDaerah === d.key ? 'bg-sky-550 bg-sky-500 text-black border border-sky-600 font-extrabold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200'}`}
+                        >
+                          {d.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Status KPI summary cards */}
                   <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Gauge */}
-                    <div className="bg-black p-5 rounded-none shadow-sm flex flex-col justify-between text-white border-b-8 border-sky-500 border border-slate-900 relative">
+                    <div className="bg-black p-5 rounded-none shadow-sm flex flex-col justify-between text-white border-b-8 border-sky-500 border border-slate-900 relative animate-fade-in">
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">PENCAPAIAN NEGERI</span>
-                          <span className="text-[9px] font-bold bg-sky-950 text-sky-400 px-2 py-0.5 border border-sky-900/50 uppercase">SA-80%</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">PENCAPAIAN COHORT</span>
+                          <span className="text-[9px] font-bold bg-sky-950 text-sky-450 px-2 py-0.5 border border-sky-900/50 uppercase">SA-80%</span>
                         </div>
                         <div className="flex items-baseline justify-between mt-2">
-                          <span className="text-4xl font-black text-sky-450 font-mono">{overall.kpiPercentage}%</span>
-                          <span className="text-[8px] font-black bg-sky-950 text-sky-350 px-1.5 py-0.5 uppercase border border-sky-900/50">MELEPASI SASARAN</span>
+                          <span className="text-4xl font-black text-sky-450 font-mono">{dispKpiPercentage}%</span>
+                          <span className="text-[8px] font-black bg-sky-950 text-sky-350 px-1.5 py-0.5 uppercase border border-sky-900/50">
+                            {dispKpiPercentage >= 80 ? 'MELEPASI SASARAN' : 'SULIT / STRATEGIK'}
+                          </span>
                         </div>
                         
                         <div className="my-3 p-2 bg-slate-950 border border-sky-950 font-mono text-[9px] text-slate-400">
                           <span className="font-bold text-sky-400 uppercase tracking-widest text-[8px] block mb-1">Formula Pengiraan KPI:</span>
                           <div className="border-b border-slate-900 pb-0.5 truncate">Total Penerima Intervensi (≥1)</div>
-                          <div className="pt-0.5 truncate">Jumlah Pendaftaran MIMO Kedah</div>
+                          <div className="pt-0.5 truncate">Jumlah Pendaftaran Cohort</div>
                           <div className="text-white font-bold mt-1 text-[9px] text-right">
-                            = ({overall.withInterventionCount} / {overall.registeredCount}) = {overall.kpiPercentage}%
+                            = ({dispWithInterventionCount} / {dispRegisteredCount}) = {dispKpiPercentage}%
                           </div>
                         </div>
                       </div>
-                      <p className="text-[9px] text-slate-400 uppercase font-mono tracking-wider pt-2 border-t border-slate-920">STATUS: CEMERLANG</p>
+                      <p className="text-[9px] text-slate-400 uppercase font-mono tracking-wider pt-2 border-t border-slate-920">
+                        PRESTASI: {dispKpiPercentage >= 80 ? 'CEMERLANG' : 'MENINGKAT'}
+                      </p>
                     </div>
 
                     {/* Total Registered */}
-                    <div className="bg-white border border-slate-200 p-5 rounded-none shadow-sm flex flex-col justify-between">
+                    <div className="bg-white border border-slate-200 p-5 rounded-none shadow-sm flex flex-col justify-between animate-fade-in">
                       <div>
                         <div className="flex items-center justify-between">
                           <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">BERDAFTAR</div>
                           <Icon name="users" className="w-5 h-5 text-slate-400" />
                         </div>
-                        <div className="text-3xl font-black text-slate-900 font-mono mt-4 leading-none">{overall.registeredCount} <span className="text-sm font-bold text-slate-400 uppercase">Orang</span></div>
+                        <div className="text-3xl font-black text-slate-900 font-mono mt-4 leading-none">{dispRegisteredCount} <span className="text-sm font-bold text-slate-400 uppercase">Orang</span></div>
                         <p className="text-[11px] text-slate-500 mt-2 font-medium">Saringan rasmi peserta program intervensi MIMO.</p>
                       </div>
                       <div className="h-1 bg-slate-900 w-full mt-4"></div>
                     </div>
 
                     {/* With Intervention */}
-                    <div className="bg-white border border-slate-200 p-5 rounded-none shadow-sm flex flex-col justify-between">
+                    <div className="bg-white border border-slate-200 p-5 rounded-none shadow-sm flex flex-col justify-between animate-fade-in">
                       <div>
                         <div className="flex items-center justify-between">
                           <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">ADA INTERVENSI</div>
                           <Icon name="shield" className="w-5 h-5 text-slate-400" />
                         </div>
-                        <div className="text-3xl font-black text-slate-900 font-mono mt-4 leading-none">{overall.withInterventionCount} <span className="text-sm font-bold text-slate-400 uppercase">Peserta</span></div>
+                        <div className="text-3xl font-black text-slate-900 font-mono mt-4 leading-none">{dispWithInterventionCount} <span className="text-sm font-bold text-slate-400 uppercase">Peserta</span></div>
                         <p className="text-[11px] text-slate-500 mt-2 font-medium">Menyelesaikan sekurang-kurangnya satu intervensi.</p>
                       </div>
                       <div className="h-1 w-full bg-slate-150 mt-4">
-                        <div className="h-full bg-sky-500" style={{ width: `${overall.kpiPercentage}%` }}></div>
+                        <div className="h-full bg-sky-500" style={{ width: `${dispKpiPercentage}%` }}></div>
                       </div>
                     </div>
 
                     {/* Facility counts */}
-                    <div className="bg-white border border-slate-200 p-5 rounded-none shadow-sm flex flex-col justify-between">
+                    <div className="bg-white border border-slate-200 p-5 rounded-none shadow-sm flex flex-col justify-between animate-fade-in">
                       <div>
                         <div className="flex items-center justify-between">
-                          <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">FASILITI</div>
+                          <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">FASILITI TINDAKAN</div>
                           <Icon name="map" className="w-5 h-5 text-slate-400" />
                         </div>
-                        <div className="text-3xl font-black text-slate-900 font-mono mt-4 leading-none">02 <span className="text-sm font-bold text-slate-400 uppercase">Klinik</span></div>
-                        <p className="text-[11px] text-slate-500 mt-2 font-medium">KKBAS & KKBSP sebagai paksi penilai Kedah.</p>
+                        <div className="text-3xl font-black text-slate-900 font-mono mt-4 leading-none">
+                          {selectedDaerah === 'KOTA SETAR' || selectedDaerah === 'KUALA MUDA' ? '01' : '02'} <span className="text-sm font-bold text-slate-400 uppercase">Klinik</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-2 font-medium">
+                          {selectedDaerah === 'KOTA SETAR' ? 'Fokus KK Bandar Alor Setar.' : selectedDaerah === 'KUALA MUDA' ? 'Fokus KK Bandar Sg. Petani.' : 'KKBAS & KKBSP sebagai paksi penilai Kedah.'}
+                        </p>
                       </div>
                       <div className="flex gap-1 mt-4">
                         <div className="h-1 flex-1 bg-sky-500"></div>
@@ -787,7 +941,7 @@
                           <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest font-display">Kompilasi Jisim BMI Kategori</h3>
                           <p className="text-[10px] text-slate-500 mt-0.5">Komposisi saringan obesiti tahap II dan obesiti tahap III.</p>
                         </div>
-                        <BmiDonutChart data={bmiChartData} total={patients.length} />
+                        <BmiDonutChart data={bmiChartData} total={activeDashboardPatients.length} />
                       </div>
                     </div>
                   </section>
@@ -804,7 +958,7 @@
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 font-mono">Pecahan Umur</p>
                         <div className="space-y-3">
                           {Object.keys(ageBrackets).map((b, idx) => {
-                            const p = Math.round(ageBrackets[b] / patients.length * 100);
+                            const p = activeDashboardPatients.length > 0 ? Math.round(ageBrackets[b] / activeDashboardPatients.length * 100) : 0;
                             return (
                               <div key={idx}>
                                 <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
@@ -827,18 +981,120 @@
                             <div className="bg-slate-50 border border-slate-200 p-3">
                               <span className="text-[10px] font-black text-blue-800 uppercase">LELAKI</span>
                               <p className="text-2xl font-black font-display font-mono text-slate-900 leading-none mt-2">{maleCount}</p>
-                              <p className="text-[9px] text-slate-400 font-mono uppercase mt-1">Peserta ({Math.round(maleCount/patients.length*100)}%)</p>
+                              <p className="text-[9px] text-slate-400 font-mono uppercase mt-1">Peserta ({activeDashboardPatients.length > 0 ? Math.round(maleCount/activeDashboardPatients.length*100) : 0}%)</p>
                             </div>
                             <div className="bg-slate-50 border border-slate-200 p-3">
                               <span className="text-[10px] font-black text-rose-800 uppercase">PEREMPUAN</span>
                               <p className="text-2xl font-black font-display font-mono text-slate-900 leading-none mt-2">{femaleCount}</p>
-                              <p className="text-[9px] text-slate-400 font-mono uppercase mt-1">Peserta ({Math.round(femaleCount/patients.length*100)}%)</p>
+                              <p className="text-[9px] text-slate-400 font-mono uppercase mt-1">Peserta ({activeDashboardPatients.length > 0 ? Math.round(femaleCount/activeDashboardPatients.length*100) : 0}%)</p>
                             </div>
                           </div>
                         </div>
-                        <p className="text-[11px] text-slate-600 font-medium leading-relaxed bg-slate-50/50 p-3 border border-slate-150">
-                          Data membuktikan majoriti pendaftar merupakan golongan <strong className="text-slate-905">Perempuan ({Math.round(femaleCount/patients.length*100)}%)</strong>, tertumpu pada zon umur produktif <strong className="text-slate-905">40 hingga 49 Tahun</strong>.
+                        <p className="text-[11px] text-slate-650 font-medium leading-relaxed bg-slate-50/50 p-3 border border-slate-150 rounded-none text-slate-600">
+                          Data membuktikan majoriti pendaftar merupakan golongan <strong className="text-slate-900">Perempuan ({activeDashboardPatients.length > 0 ? Math.round(femaleCount/activeDashboardPatients.length*100) : 0}%)</strong>, tertumpu pada zon umur produktif <strong className="text-slate-900">40 hingga 49 Tahun</strong>.
                         </p>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* COMPREHENSIVE MEDICAL & INTERVENTION ANALYSIS SECTION */}
+                  <section className="bg-slate-900 text-white p-6 border-b-8 border-sky-500 rounded-none space-y-6">
+                    <div className="border-b border-slate-800 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 bg-sky-450 rounded-full animate-ping"></span>
+                        <h3 className="text-xs font-black uppercase tracking-widest font-display text-sky-450">SEKSYEN ANALISA INTERVENSI & KLINIKAL KEDAH</h3>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-1">Data visualisasi terperinci merangkumi intervensi gaya hidup, farmakologi, saringan mental DASS, serta pembedahan bariatrik metabolik.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      
+                      {/* 1. INTERVENSI GAYA HIDUP (YA) */}
+                      <div className="bg-black/40 border border-slate-800 p-4">
+                        <h4 className="text-xs font-black text-sky-400 uppercase tracking-widest mb-3 font-mono">1. Intervensi Gaya Hidup (YA)</h4>
+                        <div className="space-y-4">
+                          {[
+                            { name: "Terapi Diet MNT", count: lifestyleMntCount, bg: "bg-blue-500" },
+                            { name: "Rutin Latihan Senaman", count: lifestyleSenamanCount, bg: "bg-red-500" },
+                            { name: "Terapi Minda Tingkah Laku", count: lifestyleTingkahLakuCount, bg: "bg-teal-500" }
+                          ].map((item, i) => {
+                            const pct = activeDashboardPatients.length > 0 ? Math.round((item.count / activeDashboardPatients.length) * 100) : 0;
+                            return (
+                              <div key={i} className="text-xs">
+                                <div className="flex justify-between font-bold mb-1">
+                                  <span className="text-slate-300 text-[11px]">{item.name}</span>
+                                  <span className="font-mono text-white text-[11px]">{item.count} ({pct}%)</span>
+                                </div>
+                                <div className="w-full bg-slate-950 h-2 rounded-none overflow-hidden">
+                                  <div className={`h-full ${item.bg}`} style={{ width: `${pct}%` }}></div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <p className="text-[9px] text-slate-500 mt-4 leading-relaxed italic">Konseling bersemuka bagi meningkatkan kepatuhan MNT & kawalan biometri pesakit.</p>
+                      </div>
+
+                      {/* 2. RAWATAN FARMAKOLOGI (KECUALIKAN TIDAK) */}
+                      <div className="bg-black/40 border border-slate-800 p-4">
+                        <h4 className="text-xs font-black text-sky-400 uppercase tracking-widest mb-3 font-mono">2. Rawatan Farmakologi</h4>
+                        {Object.keys(farmakologiCounts).length === 0 ? (
+                          <div className="h-32 flex flex-col items-center justify-center text-slate-500 text-xs">
+                            <Icon name="info" className="w-6 h-6 mb-1 text-slate-600" />
+                            <span>Tiada data ubat berdaftar</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-3.5 max-h-[180px] overflow-y-auto pr-1">
+                            {Object.keys(farmakologiCounts).map((drug, i) => {
+                              const count = farmakologiCounts[drug];
+                              const maxDrugVal = Math.max(...Object.values(farmakologiCounts), 1);
+                              const barPct = Math.round((count / maxDrugVal) * 100);
+                              return (
+                                <div key={i} className="text-xs">
+                                  <div className="flex justify-between font-bold mb-1">
+                                    <span className="text-slate-200 truncate text-[11px] font-mono">{drug}</span>
+                                    <span className="font-mono text-sky-400 text-[11px]">{count} Pesakit</span>
+                                  </div>
+                                  <div className="w-full bg-slate-950 h-1.5 rounded-none overflow-hidden">
+                                    <div className="h-full bg-sky-400" style={{ width: `${barPct}%` }}></div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        <p className="text-[9px] text-slate-500 mt-4 leading-relaxed italic">Rawatan ubat-ubatan (GLP-1 receptor agonists, Phentermine, dsb) mengikut kelayakan klinikal.</p>
+                      </div>
+
+                      {/* 3. PEMBEDAHAN BARIATRIK / METABOLIK (KECUALIKAN TIDAK) */}
+                      <div className="bg-black/40 border border-slate-800 p-4">
+                        <h4 className="text-xs font-black text-sky-400 uppercase tracking-widest mb-3 font-mono">3. Pembedahan Bariatrik</h4>
+                        {Object.keys(bariatrikCounts).length === 0 ? (
+                          <div className="h-32 flex flex-col items-center justify-center text-slate-500 text-xs">
+                            <Icon name="info" className="w-6 h-6 mb-1 text-slate-600" />
+                            <span>Tiada rujukan pembedahan aktif</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-3 max-h-[180px] overflow-y-auto pr-1">
+                            {Object.keys(bariatrikCounts).map((surgery, i) => {
+                              const count = bariatrikCounts[surgery];
+                              const maxSurgVal = Math.max(...Object.values(bariatrikCounts), 1);
+                              const barPct = Math.round((count / maxSurgVal) * 100);
+                              return (
+                                <div key={i} className="text-xs">
+                                  <div className="flex justify-between font-bold mb-1">
+                                    <span className="text-slate-200 truncate text-[11px] font-mono">{surgery}</span>
+                                    <span className="font-mono text-emerald-400 text-[11px]">{count} Pesakit</span>
+                                  </div>
+                                  <div className="w-full bg-slate-950 h-1.5 rounded-none overflow-hidden">
+                                    <div className="h-full bg-emerald-500" style={{ width: `${barPct}%` }}></div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        <p className="text-[9px] text-slate-500 mt-4 leading-relaxed italic">Pesakit dengan BMI ekstrim dirujuk untuk Pembedahan Bariatrik bagi pemulihan metabolik kritikal.</p>
                       </div>
                     </div>
                   </section>
@@ -871,8 +1127,7 @@
                           Sahkan Akses
                         </button>
                       </form>
-                      <p className="text-[10px] font-mono text-slate-400 mt-6 leading-none">Kata laluan demo: <strong className="text-sky-600 font-bold">mimo2026</strong></p>
-                    </div>
+                     </div>
                   ) : (
                     /* --- UNLOCKED PATIENT DIRECTORY --- */
                     <React.Fragment>
@@ -1039,118 +1294,223 @@
                   </div>
                 </div>
 
-                <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 border-b border-slate-150 pb-3 font-mono text-slate-700">
-                    <div>
-                      <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none">NO. KP</span>
-                      <strong className="text-xs text-slate-900">{selectedPatient.noId}</strong>
-                    </div>
-                    <div>
-                      <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none">UMUR / JEX</span>
-                      <strong className="text-xs text-slate-900 uppercase">{selectedPatient.umur} T / {selectedPatient.jantina}</strong>
-                    </div>
-                    <div>
-                      <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none">BANGSA</span>
-                      <strong className="text-xs text-slate-900 uppercase">{selectedPatient.bangsa}</strong>
-                    </div>
-                    <div>
-                      <span className="text-[9px] text-slate-400 font-bold block uppercase leading-none">TELEFON</span>
-                      <strong className="text-xs text-slate-900">{selectedPatient.noTelefon}</strong>
-                    </div>
-                  </div>
-
+                <div className="p-5 space-y-5 max-h-[75vh] overflow-y-auto">
+                  
+                  {/* 1. Profil Peribadi & Hubungan */}
                   <div>
-                    <h4 className="text-[10px] pb-1 border-b border-sky-450 font-black uppercase text-slate-500 mb-2 font-display tracking-widest">Ukuran Klinikal (Baseline)</h4>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-slate-550/5 border border-slate-200 p-2.5">
-                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-wide">UKURAN BMI</span>
-                        <p className="text-lg font-black font-mono text-slate-800 mt-0.5">{selectedPatient.baseline.bmi} KG/m²</p>
-                        <p className="text-[9px] text-slate-500 font-extrabold uppercase mt-0.5">{selectedPatient.baseline.bmiKategori}</p>
-                        <p className="text-[9px] text-slate-400 mt-1">Berat {selectedPatient.baseline.berat} KG | {selectedPatient.baseline.tinggi} CM</p>
+                    <h4 className="text-[10px] pb-1 border-b border-sky-450 font-black uppercase text-slate-500 mb-2.5 font-display tracking-widest">Maklumat Profil & Hubungan</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                      <div className="bg-slate-50 p-2 border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-tight font-mono">No. Kad Pengenalan</span>
+                        <strong className="text-slate-900 font-mono">{selectedPatient.noId || 'Tiada'}</strong>
                       </div>
-                      <div className="bg-slate-550/5 border border-slate-200 p-2.5">
-                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-wide">TEKANAN DARAH (BP)</span>
-                        <p className="text-lg font-black font-mono text-slate-800 mt-0.5">{selectedPatient.baseline.systolic} / {selectedPatient.baseline.diastolic}</p>
-                        <p className="text-[9px] text-slate-500 font-semibold mt-0.5">Sistolik/Diastolik (mmHg)</p>
+                      <div className="bg-slate-50 p-2 border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-tight font-mono">Tarikh Lahir</span>
+                        <strong className="text-slate-900 font-mono">{selectedPatient.tarikhLahir || 'Tiada'}</strong>
                       </div>
-                      <div className="bg-slate-550/5 border border-slate-200 p-2.5">
-                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-wide">UKUR PINGGANG</span>
-                        <p className="text-lg font-black font-mono text-slate-800 mt-0.5">{selectedPatient.baseline.waist || 'Tiada Rekod'} CM</p>
-                        <p className="text-[9px] text-slate-400 mt-1">Saringan baseline bahagian atas.</p>
+                      <div className="bg-slate-50 p-2 border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-tight font-mono">Umur & Jantina</span>
+                        <strong className="text-slate-900 uppercase">{selectedPatient.umur} T / {selectedPatient.jantina}</strong>
                       </div>
-                      <div className="bg-slate-550/5 border border-slate-200 p-2.5">
-                        <span className="text-[9px] text-slate-400 font-black uppercase tracking-wide">MENTAL DASS</span>
-                        <p className="text-xs font-black text-slate-850 mt-1 truncate">{selectedPatient.baseline.mentalStatus || 'TIADA SARINGAN'}</p>
-                        <p className="text-[10px] text-rose-800 font-bold uppercase mt-1 leading-tight">{selectedPatient.baseline.mentalResult || 'Lepas pemeriksaan'}</p>
+                      <div className="bg-slate-50 p-2 border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-tight font-mono">Bangsa</span>
+                        <strong className="text-slate-900 uppercase">{selectedPatient.bangsa || 'Tiada'}</strong>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 text-xs">
+                      <div className="bg-slate-50 p-2 border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-tight font-mono">No. Telefon Bimbit</span>
+                        <strong className="text-slate-900 font-mono flex items-center gap-1.5">
+                          <span className="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                          {selectedPatient.noTelefon || 'Tiada Rekod'}
+                        </strong>
+                      </div>
+                      <div className="bg-slate-50 p-2 border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-tight font-mono">Geografi Rumah</span>
+                        <strong className="text-slate-900 uppercase truncate">{selectedPatient.daerah}, KEDAH</strong>
                       </div>
                     </div>
                   </div>
 
+                  {/* 2. Rujukan Pentadbiran */}
                   <div>
-                    <h4 className="text-[10px] pb-1 border-b border-sky-450 font-black uppercase text-slate-500 mb-2 font-display tracking-widest">Komorbiditi Sedia Ada</h4>
-                    <div className="flex flex-wrap gap-1.5 text-[10px] font-bold uppercase font-mono tracking-tight text-slate-700">
-                      <span className={`px-2 py-1 border ${selectedPatient.comorbidities.diabetes ? 'bg-indigo-50 border-indigo-200 text-indigo-850' : 'bg-slate-100 border-slate-150 text-slate-400'}`}>
-                        {selectedPatient.comorbidities.diabetes ? '✓' : '✗'} Diabetes (Kencing Manis)
+                    <h4 className="text-[10px] pb-1 border-b border-sky-450 font-black uppercase text-slate-500 mb-2.5 font-display tracking-widest">Maklumat Rujukan & Geografi Kontrak</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                      <div className="bg-slate-50 p-2 border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-tight font-mono">Negeri Sasaran</span>
+                        <strong className="text-slate-900 uppercase">{selectedPatient.negeri || 'KEDAH'}</strong>
+                      </div>
+                      <div className="bg-slate-50 p-2 border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-tight font-mono">Daerah Klinikal</span>
+                        <strong className="text-slate-900 uppercase">{selectedPatient.daerah || 'KOTA SETAR'}</strong>
+                      </div>
+                      <div className="bg-slate-50 p-2 border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-tight font-mono">Sumber Rujukan</span>
+                        <strong className="text-slate-900 uppercase truncate" title={selectedPatient.sumberRujukan}>{selectedPatient.sumberRujukan || 'Klinik Kesihatan'}</strong>
+                      </div>
+                      <div className="bg-slate-50 p-2 border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase leading-tight font-mono">Status Rujukan</span>
+                        <strong className="text-slate-900 uppercase truncate" title={selectedPatient.statusRujukan}>{selectedPatient.statusRujukan || 'Selesai Saringan'}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Ukuran Klinikal & Mental */}
+                  <div>
+                    <h4 className="text-[10px] pb-1 border-b border-sky-450 font-black uppercase text-slate-500 mb-2.5 font-display tracking-widest">Ukuran Klinikal Baseline & Mental DASS</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 text-xs">
+                      <div className="bg-slate-900 text-white p-2.5 border border-slate-800">
+                        <span className="text-[8px] text-slate-400 font-mono block uppercase">Jisim BMI</span>
+                        <p className="text-lg font-black font-mono text-sky-400 mt-1 leading-none">{selectedPatient.baseline.bmi} <span className="text-[9px] font-normal text-slate-300">KG/m²</span></p>
+                        <p className="text-[8px] text-slate-300 font-bold uppercase mt-1 truncate">{selectedPatient.baseline.bmiKategori}</p>
+                        <p className="text-[8px] text-slate-500 mt-1">H: {selectedPatient.baseline.tinggi}cm | W: {selectedPatient.baseline.berat}kg</p>
+                      </div>
+                      <div className="bg-slate-550/5 border border-slate-200 p-2.5">
+                        <span className="text-[8px] text-slate-500 font-mono block uppercase">Tekanan Darah (BP)</span>
+                        <p className="text-lg font-black font-mono text-slate-800 mt-1 leading-none">{selectedPatient.baseline.systolic}/{selectedPatient.baseline.diastolic} <span className="text-[9px] font-normal text-slate-400">mmHg</span></p>
+                        <p className="text-[8px] text-slate-500 mt-1.5 font-medium">Sistolik / Diastolik</p>
+                      </div>
+                      <div className="bg-slate-550/5 border border-slate-200 p-2.5">
+                        <span className="text-[8px] text-slate-500 font-mono block uppercase">Lilitan Pinggang</span>
+                        <p className="text-lg font-black font-mono text-slate-800 mt-1 leading-none">{selectedPatient.baseline.waist || 'N/A'} <span className="text-[9px] font-normal text-slate-400">cm</span></p>
+                        <p className="text-[8px] text-slate-400 mt-1.5 leading-tight">Ukur pinggang baseline</p>
+                      </div>
+                      <div className="bg-slate-550/5 border border-slate-200 p-2.5">
+                        <span className="text-[8px] text-slate-500 font-mono block uppercase">Saringan Mental</span>
+                        <p className="text-xs font-black text-rose-700 mt-1.5 truncate">{selectedPatient.baseline.mentalStatus || 'TIADA DATA'}</p>
+                        <p className="text-[9px] text-slate-500 font-bold uppercase mt-0.5 leading-tight truncate" title={selectedPatient.baseline.mentalResult}>
+                          {selectedPatient.baseline.mentalResult || 'Lepas Tapisan'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Komorbiditi Kesihatan */}
+                  <div>
+                    <h4 className="text-[10px] pb-1 border-b border-sky-450 font-black uppercase text-slate-500 mb-2.5 font-display tracking-widest">Status Komorbiditi Berdaftar</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[10px] font-bold uppercase font-mono tracking-tight text-slate-700">
+                      <span className={`px-2 py-1.5 border flex items-center gap-1.5 ${selectedPatient.comorbidities.diabetes ? 'bg-blue-50 border-blue-200 text-blue-900' : 'bg-slate-50 border-slate-150 text-slate-400'}`}>
+                        <span className={`inline-block w-2.5 h-2.5 text-center leading-none ${selectedPatient.comorbidities.diabetes ? 'text-blue-600' : 'text-slate-300'}`}>{selectedPatient.comorbidities.diabetes ? '✓' : '✗'}</span>
+                        Diabetes (Kencing Manis)
                       </span>
-                      <span className={`px-2 py-1 border ${selectedPatient.comorbidities.hipertensi ? 'bg-red-50 border-red-200 text-red-850' : 'bg-slate-100 border-slate-150 text-slate-400'}`}>
-                        {selectedPatient.comorbidities.hipertensi ? '✓' : '✗'} Hipertensi (Darah Tinggi)
+                      <span className={`px-2 py-1.5 border flex items-center gap-1.5 ${selectedPatient.comorbidities.hipertensi ? 'bg-red-50 border-red-200 text-red-900' : 'bg-slate-50 border-slate-150 text-slate-400'}`}>
+                        <span className={`inline-block w-2.5 h-2.5 text-center leading-none ${selectedPatient.comorbidities.hipertensi ? 'text-red-600' : 'text-slate-300'}`}>{selectedPatient.comorbidities.hipertensi ? '✓' : '✗'}</span>
+                        Hipertensi (Darah Tinggi)
                       </span>
-                      <span className={`px-2 py-1 border ${selectedPatient.comorbidities.dislipidemia ? 'bg-emerald-50 border-emerald-200 text-emerald-850' : 'bg-slate-100 border-slate-150 text-slate-400'}`}>
-                        {selectedPatient.comorbidities.dislipidemia ? '✓' : '✗'} Dislipidemia (Kolesterol)
+                      <span className={`px-2 py-1.5 border flex items-center gap-1.5 ${selectedPatient.comorbidities.dislipidemia ? 'bg-teal-50 border-teal-200 text-teal-900' : 'bg-slate-50 border-slate-150 text-slate-400'}`}>
+                        <span className={`inline-block w-2.5 h-2.5 text-center leading-none ${selectedPatient.comorbidities.dislipidemia ? 'text-teal-600' : 'text-slate-300'}`}>{selectedPatient.comorbidities.dislipidemia ? '✓' : '✗'}</span>
+                        Dislipidemia (Kolesterol)
+                      </span>
+                      <span className={`px-2 py-1.5 border flex items-center gap-1.5 ${selectedPatient.comorbidities.kardiovaskular ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-slate-50 border-slate-150 text-slate-400'}`}>
+                        <span className={`inline-block w-2.5 h-2.5 text-center leading-none ${selectedPatient.comorbidities.kardiovaskular ? 'text-amber-600' : 'text-slate-300'}`}>{selectedPatient.comorbidities.kardiovaskular ? '✓' : '✗'}</span>
+                        Penyakit Kardiovaskular
+                      </span>
+                      <span className={`px-2 py-1.5 border flex items-center gap-1.5 md:col-span-2 ${selectedPatient.comorbidities.lainLain ? 'bg-purple-50 border-purple-200 text-purple-900' : 'bg-slate-50 border-slate-150 text-slate-400'}`}>
+                        <span className={`inline-block w-2.5 h-2.5 text-center leading-none ${selectedPatient.comorbidities.lainLain ? 'text-purple-600' : 'text-slate-300'}`}>{selectedPatient.comorbidities.lainLain ? '✓' : '✗'}</span>
+                        Lain-Lain Komorbiditi
                       </span>
                     </div>
                   </div>
 
+                  {/* 5. Pelan Intervensi Bertempoh (MNT, Senaman, Minda, Farmakologi, Bariatrik) */}
                   <div>
-                    <h4 className="text-[10px] pb-1 border-b border-sky-450 font-black uppercase text-slate-500 mb-2 font-display tracking-widest">Status Penerimaan Intervensi</h4>
-                    <div className="space-y-1.5 text-xs">
+                    <h4 className="text-[10px] pb-1 border-b border-sky-450 font-black uppercase text-slate-500 mb-2.5 font-display tracking-widest">Pelan Tindakan Intervensi Klinikal</h4>
+                    <div className="space-y-2 text-xs">
                       
-                      <div className="p-2.5 bg-slate-50 border border-slate-205 flex items-center justify-between">
+                      {/* Diet MNT */}
+                      <div className="p-2.5 bg-slate-50 border border-slate-200 flex items-center justify-between">
                         <div>
-                          <strong className="text-slate-850 block uppercase text-[10px]">Terapi Diet MNT</strong>
-                          <span className="text-[9px] text-slate-400 font-mono mt-0.5">Penyusunan pelan diet makanan KKM</span>
+                          <strong className="text-slate-850 block uppercase text-[10px]">Terapi Pemakanan Diet MNT</strong>
+                          <span className="text-[9px] text-slate-400 font-mono mt-0.5">Penyusunan pelan diet makanan seimbang</span>
                         </div>
                         {selectedPatient.interventions.mnt ? (
                           <div className="text-right">
-                            <span className="px-2 py-0.5 bg-sky-50 text-sky-850 border border-sky-200 text-[9px] font-black">LENGKAP</span>
-                            {selectedPatient.interventions.mntTarikh && <p className="text-[9px] text-slate-400 mt-0.5 font-mono">Daftar: {selectedPatient.interventions.mntTarikh}</p>}
+                            <span className="px-2 py-0.5 bg-sky-100 text-sky-850 border border-sky-200 text-[9px] font-black uppercase rounded-xs">BERJAYA AKTIF</span>
+                            {selectedPatient.interventions.mntTarikh && <p className="text-[9px] text-slate-400 mt-0.5 font-mono">Pendaftaran: {selectedPatient.interventions.mntTarikh}</p>}
                           </div>
-                        ) : <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase">TIADA REKOD</span>}
+                        ) : <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase border border-slate-200">TIADA REKOD</span>}
                       </div>
 
-                      <div className="p-2.5 bg-slate-50 border border-slate-205 flex items-center justify-between">
+                      {/* Senaman */}
+                      <div className="p-2.5 bg-slate-50 border border-slate-200 flex items-center justify-between">
                         <div>
-                          <strong className="text-slate-850 block uppercase text-[10px]">Rutin Senaman Fizikal</strong>
-                          <span className="text-[9px] text-slate-400 font-mono mt-0.5">Latihan kardiak 150 minit seminggu</span>
+                          <strong className="text-slate-850 block uppercase text-[10px]">Latihan Senaman Fizikal</strong>
+                          <span className="text-[9px] text-slate-400 font-mono mt-0.5">Preskripsi latihan kardiak & rintangan</span>
                         </div>
                         {selectedPatient.interventions.senaman ? (
                           <div className="text-right">
-                            <span className="px-2 py-0.5 bg-sky-50 text-sky-850 border border-sky-200 text-[9px] font-black">LENGKAP</span>
-                            {selectedPatient.interventions.senamanTarikh && <p className="text-[9px] text-slate-400 mt-0.5 font-mono">Tarikh: {selectedPatient.interventions.senamanTarikh}</p>}
+                            <span className="px-2 py-0.5 bg-sky-100 text-sky-850 border border-sky-200 text-[9px] font-black uppercase rounded-xs">BERJAYA AKTIF</span>
+                            {selectedPatient.interventions.senamanTarikh && <p className="text-[9px] text-slate-400 mt-0.5 font-mono">Tarikh Sesi: {selectedPatient.interventions.senamanTarikh}</p>}
                           </div>
-                        ) : <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase">TIADA REKOD</span>}
+                        ) : <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase border border-slate-200">TIADA REKOD</span>}
                       </div>
 
-                      <div className="p-2.5 bg-slate-50 border border-slate-205 flex items-center justify-between">
+                      {/* Tingkah Laku */}
+                      <div className="p-2.5 bg-slate-50 border border-slate-200 flex items-center justify-between">
                         <div>
-                          <strong className="text-slate-850 block uppercase text-[10px]">Terapi Tingkah Laku</strong>
-                          <span className="text-[9px] text-slate-400 font-mono mt-0.5">Konseling minda & disiplin kesihatan</span>
+                          <strong className="text-slate-850 block uppercase text-[10px]">Terapi Tingkah Laku & Disiplin Minda</strong>
+                          <span className="text-[9px] text-slate-400 font-mono mt-0.5">Bimbingan psikologi & sokongan keluarga</span>
                         </div>
                         {selectedPatient.interventions.tingkahLaku ? (
                           <div className="text-right">
-                            <span className="px-2 py-0.5 bg-sky-50 text-sky-850 border border-sky-200 text-[9px] font-black">LENGKAP</span>
-                            {selectedPatient.interventions.tingkahLakuTarikh && <p className="text-[9px] text-slate-400 mt-0.5 font-mono">Tarikh: {selectedPatient.interventions.tingkahLakuTarikh}</p>}
+                            <span className="px-2 py-0.5 bg-sky-100 text-sky-850 border border-sky-200 text-[9px] font-black uppercase rounded-xs">BERJAYA AKTIF</span>
+                            {selectedPatient.interventions.tingkahLakuTarikh && <p className="text-[9px] text-slate-400 mt-0.5 font-mono">Tarikh Sesi: {selectedPatient.interventions.tingkahLakuTarikh}</p>}
                           </div>
-                        ) : <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase">TIADA REKOD</span>}
+                        ) : <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase border border-slate-200">TIADA REKOD</span>}
+                      </div>
+
+                      {/* Farmakologi (Preskripsi Ubat Obesiti) */}
+                      <div className="p-2.5 bg-slate-50 border border-slate-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <strong className="text-slate-850 block uppercase text-[10px]">Rawatan Ubat Farmakologi Obesiti</strong>
+                            <span className="text-[9px] text-slate-400 font-mono mt-0.5">Preskripsi ubat berpaten diiktiraf Kementerian Kesihatan</span>
+                          </div>
+                          {selectedPatient.interventions.farmakologi && selectedPatient.interventions.farmakologi !== 'TIDAK' && selectedPatient.interventions.farmakologi !== 'TIDAK BERKAITAN' ? (
+                            <div className="text-right">
+                              <span className="px-2 py-0.5 bg-purple-100 text-purple-855 border border-purple-200 text-[9px] font-black uppercase rounded-xs">ADA RAWATAN</span>
+                              {selectedPatient.interventions.farmakologiTarikh && <p className="text-[9px] text-slate-400 mt-0.5 font-mono">Resipi: {selectedPatient.interventions.farmakologiTarikh}</p>}
+                            </div>
+                          ) : <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase border border-slate-200">TIADA UBAT</span>}
+                        </div>
+                        {selectedPatient.interventions.farmakologi && selectedPatient.interventions.farmakologi !== 'TIDAK' && selectedPatient.interventions.farmakologi !== 'TIDAK BERKAITAN' && (
+                          <div className="mt-2 p-2 bg-purple-50/50 border border-purple-150 text-[10px] text-purple-900 font-mono">
+                            <span className="font-bold uppercase tracking-wider block text-[8px] text-purple-600">Preskripsi Klinikal:</span>
+                            {selectedPatient.interventions.farmakologi}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Pembedahan Bariatrik / Metabolik */}
+                      <div className="p-2.5 bg-slate-50 border border-slate-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <strong className="text-slate-850 block uppercase text-[10px]">Pembedahan Bariatrik / Metabolik</strong>
+                            <span className="text-[9px] text-slate-400 font-mono mt-0.5">Sleeve gastrectomy / gastric bypass bagi kes ekstrim</span>
+                          </div>
+                          {selectedPatient.interventions.bariatrik ? (
+                            <div className="text-right">
+                              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-850 border border-emerald-200 text-[9px] font-black uppercase rounded-xs">AKTIF RUJUKAN</span>
+                              {selectedPatient.interventions.bariatrikTarikh && <p className="text-[9px] text-slate-400 mt-0.5 font-mono">Selesai: {selectedPatient.interventions.bariatrikTarikh}</p>}
+                            </div>
+                          ) : <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase border border-slate-200">TIADA RUJUKAN</span>}
+                        </div>
+                        {selectedPatient.interventions.bariatrik && (
+                          <div className="mt-2 p-2 bg-emerald-50/50 border border-emerald-150 text-[10px] text-emerald-905 font-mono">
+                            <span className="font-bold uppercase tracking-wider block text-[8px] text-emerald-600">Status Pembedahan / Rawatan:</span>
+                            {selectedPatient.interventions.bariatrikRawatan || 'Dalam Proses Saringan / Selesai'}
+                          </div>
+                        )}
                       </div>
 
                     </div>
                   </div>
+
                 </div>
 
-                <div className="bg-slate-100 p-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600 font-mono uppercase font-bold tracking-tight">
-                  <span>Tarikh Daftar: {selectedPatient.tarikhDaftar || 'Tiada Rekod'}</span>
-                  <span>Akaun: <strong className="text-slate-900">{selectedPatient.statusAkaun}</strong></span>
+                <div className="bg-slate-100 p-4 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-600 font-mono uppercase font-bold tracking-tight">
+                  <span>Tarikh Pendaftaran MIMO: {selectedPatient.tarikhDaftar || 'Tiada Rekod'}</span>
+                  <span>Akaun: <span className="text-emerald-500 font-black">{selectedPatient.statusAkaun || 'AKTIF'}</span></span>
                 </div>
               </div>
             </div>
