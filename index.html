@@ -755,7 +755,7 @@ function renderBP(active) {
     else norm++;
   });
   donut('cBP',[low,norm,high],['#6366f1','#34d399','#ef4444'],'lgBP',
-    ['Rendah (<90/60)','Normal (90–139/60–89)','Tinggi (≥140/90)']);
+    ['Rendah (<90/60)','Normal (90–139/60–89)',' (≥140/90)']);
 }
 // ══ FBS (mmol/L) ══
 function renderFBS(active) {
@@ -769,7 +769,7 @@ function renderFBS(active) {
   });
   donut('cFBS',[rendah,normal,praDM,dm],
     ['#6366f1','#34d399','#fbbf24','#ef4444'],'lgFBS',
-    ['Rendah (<3.9)','Normal (3.9–5.5)','Berisiko (5.6–6.9)','Tinggi (≥7.0)']);
+    ['Rendah (<3.9)','Normal (3.9–5.5)','Pra-DM (5.6–6.9)','DM (≥7.0)']);
 }
 // ══ HbA1c ══
 function renderHba1c(active) {
