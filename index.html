@@ -759,17 +759,17 @@ function renderBP(active) {
 }
 // ══ FBS (mmol/L) ══
 function renderFBS(active) {
-  let rendah=0, normal=0, praDM=0, dm=0;
+  let rendah=0, normal=0, berisiko=0, tinggi=0;
   active.forEach(r => {
     const v=r[C.fbs]; if (v==null) return;
     if      (v <  3.9) rendah++;
     else if (v <= 5.5) normal++;
-    else if (v <  7.0) praDM++;
-    else               dm++;
+    else if (v <  7.0) berisiko++;
+    else               tinggi++;
   });
-  donut('cFBS',[rendah,normal,praDM,dm],
+  donut('cFBS',[rendah,normal,berisiko,tinggi],
     ['#6366f1','#34d399','#fbbf24','#ef4444'],'lgFBS',
-    ['Rendah (<3.9)','Normal (3.9–5.5)','Pra-DM (5.6–6.9)','DM (≥7.0)']);
+    ['Rendah (<3.9)','Normal (3.9–5.5)','Berisiko (5.6–6.9)','Tinggi (≥7.0)']);
 }
 // ══ HbA1c ══
 function renderHba1c(active) {
