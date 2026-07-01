@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard MIMO Kedah – Program Pengurusan Obesiti Bersepadu</title>
+  <meta name="description" content="Dashboard pemantauan Program MIMO (Pengurusan Obesiti Bersepadu) Kedah. Menunjukkan enrolment, status aktif, data klinikal, dan pencapaian KPI mengikut daerah dan klinik kesihatan." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..800;1,14..32,300..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:        #070c18;
+      --bg2:       #0c1320;
+      --card:      #101828;
+      --card2:     #19243a;
+      --border:    rgba(99,179,237,0.10);
+      --border-g:  rgba(99,179,237,0.28);
+      --c-blue:    #38bdf8;
+      --c-teal:    #2dd4bf;
+      --c-violet:  #a78bfa;
+      --c-rose:    #fb7185;
+      --c-amber:   #fbbf24;
+      --c-green:   #34d399;
+      --c-orange:  #fb923c;
+      --t1: #eef4ff;
+      --t2: #94a3b8;
+      --t3: #4b5c73;
+      --g-blue:   linear-gradient(135deg,#0ea5e9,#6366f1);
+      --g-teal:   linear-gradient(135deg,#14b8a6,#06b6d4);
+      --g-violet: linear-gradient(135deg,#8b5cf6,#ec4899);
+      --g-amber:  linear-gradient(135deg,#f59e0b,#ef4444);
+      --g-green:  linear-gradient(135deg,#10b981,#3b82f6);
+      --r: 16px; --rs: 10px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;overflow-x:hidden}
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-track{background:var(--bg)}
+    ::-webkit-scrollbar-thumb{background:var(--t3);border-radius:99px}
+    
+    /* ── SIDEBAR STYLES ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100vh;
+      background: var(--card2);
+      border-right: 1px solid var(--border);
+      z-index: 1000;
+      transition: left 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+    }
+    .sidebar.open { left: 0; }
+    
+    .sidebar-header {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      border-bottom: 1px solid var(--border);
+      height: 69px; /* Align with main header */
+    }
+    .sidebar-header h2 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--t1);
+    }
+    .close-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--t2);
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+    }
+    
+    .sidebar-nav {
+      padding: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .nav-link {
+      padding: 0.85rem 1.5rem;
+      color: var(--t2);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover {
+      background: rgba(255,255,255,0.03);
+      color: var(--t1);
+    }
+    .nav-link.active {
+      background: rgba(56,189,248,.1);
+      color: var(--c-blue);
+      border-left-color: var(--c-blue);
+    }
+    
+    .sidebar-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-overlay.show { display: block; opacity: 1; }
+    
+    .main-wrapper {
+      transition: margin-left 0.3s ease, width 0.3s ease;
+      width: 100%;
+    }
+    
+    .menu-toggle {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--t1);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.35rem 0.6rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .menu-toggle:hover { background: rgba(255,255,255,0.1); border-color: var(--border-g); }
+    
+    @media (min-width: 1024px) {
+      .sidebar { left: 0; box-shadow: none; }
+      .sidebar.closed { left: -280px; }
+      .main-wrapper { margin-left: 280px; width: calc(100% - 280px); }
+      .main-wrapper.expanded { margin-left: 0; width: 100%; }
+      .sidebar-overlay { display: none !important; }
+      .close-btn { display: none; }
+    }
+
+    /* ── HEADER ── */
+    header{
+      background:linear-gradient(180deg,rgba(14,165,233,.09) 0%,transparent 100%);
+      border-bottom:1px solid var(--border);
+      padding:0 2rem;position:sticky;top:0;z-index:200;
+      backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    }
+    .hdr{max-width:1680px;margin:0 auto;display:flex;align-items:center;gap:1.25rem;height:68px}
+    .logo{display:flex;align-items:center;gap:.75rem;flex-shrink:0}
+    .logo-ico{
+      width:42px;height:42px;border-radius:11px;
+      background:var(--g-blue);
+      display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+      box-shadow:0 0 18px rgba(56,189,248,.35);flex-shrink:0;
+    }
+    .logo h1{font-family:'Plus Jakarta Sans',sans-serif;font-size:1rem;font-weight:700;line-height:1.2}
+    .logo p{font-size:.7rem;color:var(--t2)}
+    .hdiv{width:1px;height:28px;background:var(--border);flex-shrink:0}
+    .live{font-size:.7rem;color:var(--t2);display:flex;align-items:center;gap:.4rem}
+    .dot{width:7px;height:7px;border-radius:50%;background:#34d399;animation:blink 2s infinite}
+    @keyframes blink{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.5)}50%{box-shadow:0 0 0 5px rgba(52,211,153,0)}}
+    .hbadge{
+      margin-left:auto;font-size:.7rem;font-weight:700;
+      padding:.3rem .85rem;border-radius:99px;
+      background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.28);color:#34d399;
+    }
+    /* ── MAIN ── */
+    main{max-width:1680px;margin:0 auto;padding:1.75rem 2rem}
+    section{margin-bottom:2.25rem}
+    /* ── SECTION HEADER ── */
+    .sec-hdr{display:flex;align-items:center;gap:.7rem;margin-bottom:1.2rem}
+    .sec-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+    .sec-hdr h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:1rem;font-weight:700}
+    .sec-hdr small{display:block;font-size:.72rem;color:var(--t2);margin-top:.1rem}
+    /* ── FILTER BAR ── */
+    .fbar{
+      display:flex;flex-wrap:wrap;gap:.85rem;align-items:center;
+      padding:1.1rem 1.4rem;
+      background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+      margin-bottom:1.75rem;
+    }
+    .flbl{font-size:.75rem;color:var(--t2);font-weight:500;white-space:nowrap}
+    .fgrp{display:flex;align-items:center;gap:.55rem}
+    select{
+      background:var(--bg2);border:1px solid var(--border);color:var(--t1);
+      padding:.48rem 2.1rem .48rem .85rem;border-radius:var(--rs);
+      font-size:.81rem;font-family:inherit;cursor:pointer;appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right .6rem center;background-size:9px;
+      transition:border-color .2s,box-shadow .2s;min-width:175px;
+    }
+    select:hover,select:focus{border-color:var(--border-g);box-shadow:0 0 0 3px rgba(99,179,237,.09);outline:none}
+    .fdiv{width:1px;height:22px;background:var(--border)}
+    .btn-reset{
+      background:transparent;border:1px solid var(--border);color:var(--t2);
+      padding:.45rem .9rem;border-radius:var(--rs);font-size:.79rem;
+      font-family:inherit;cursor:pointer;transition:all .2s;
+      display:flex;align-items:center;gap:.35rem;
+    }
+    .btn-reset:hover{border-color:var(--border-g);color:var(--t1);background:rgba(99,179,237,.07)}
+    .fcnt{
+      margin-left:auto;font-size:.77rem;color:var(--c-blue);font-weight:600;
+      background:rgba(56,189,248,.07);padding:.28rem .75rem;border-radius:99px;
+      border:1px solid rgba(56,189,248,.18);
+    }
+    /* ── STAT CARDS ── */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.1rem}
+    .scard{
+      background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+      padding:1.35rem;position:relative;overflow:hidden;
+      transition:border-color .3s,transform .3s,box-shadow .3s;cursor:default;
+    }
+    .scard::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:3px;
+      border-radius:var(--r) var(--r) 0 0;
+    }
+    .scard.blue::before{background:var(--g-blue)}.scard.teal::before{background:var(--g-teal)}
+    .scard.violet::before{background:var(--g-violet)}.scard.amber::before{background:var(--g-amber)}
+    .scard.green::before{background:var(--g-green)}
+    .scard:hover{border-color:var(--border-g);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.35)}
+    .scard .sico{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:.9rem}
+    .scard.blue  .sico{background:rgba(56,189,248,.1)}
+    .scard.teal  .sico{background:rgba(45,212,191,.1)}
+    .scard.violet .sico{background:rgba(167,139,250,.1)}
+    .scard.amber .sico{background:rgba(251,191,36,.1)}
+    .scard.green .sico{background:rgba(52,211,153,.1)}
+    .sval{font-size:2.5rem;font-weight:800;line-height:1;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-.02em;margin-bottom:.35rem}
+    .scard.blue  .sval{color:var(--c-blue)}.scard.teal  .sval{color:var(--c-teal)}
+    .scard.violet .sval{color:var(--c-violet)}.scard.amber .sval{color:var(--c-amber)}
+    .scard.green .sval{color:var(--c-green)}
+    .slbl{font-size:.78rem;color:var(--t2);font-weight:500;line-height:1.4}
+    .ssub{font-size:.7rem;color:var(--t3);margin-top:.45rem;display:flex;align-items:center;gap:.25rem}
+    .kpi-bar-t{height:6px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;margin-top:.9rem}
+    .kpi-bar-f{height:100%;border-radius:99px;background:var(--g-green);transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+    .kpi-pct{font-size:.68rem;color:var(--t3);margin-top:.35rem;display:flex;justify-content:space-between}
+    /* ── CHART CARDS ── */
+    .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:1.1rem}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
+    .ccard{
+      background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+      padding:1.35rem;transition:border-color .3s;
+    }
+    .ccard:hover{border-color:var(--border-g)}
+    .ccard.full{grid-column:1/-1}
+    .ctitle{font-size:.88rem;font-weight:600;margin-bottom:.2rem;font-family:'Plus Jakarta Sans',sans-serif}
+    .csub{font-size:.72rem;color:var(--t2);margin-bottom:1.1rem}
+    /* ── DONUT ── */
+    .dnut-wrap{display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap}
+    .dlegend .li{display:flex;align-items:center;gap:.55rem;margin-bottom:.55rem}
+    .ldot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+    .ltxt{font-size:.76rem;color:var(--t2);flex:1}
+    .lval{font-size:.78rem;font-weight:600;color:var(--t1)}
+    /* ── BMI STACK ── */
+    .bstack{display:flex;flex-direction:column;gap:.7rem;margin-top:.5rem}
+    .brow{display:flex;align-items:center;gap:.7rem}
+    .blbl{font-size:.72rem;color:var(--t2);width:115px;flex-shrink:0}
+    .btrack{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
+    .bfill{height:100%;border-radius:99px;transition:width 1s ease}
+    .bcnt{font-size:.72rem;color:var(--t2);width:26px;text-align:right;flex-shrink:0}
+    /* ── TABLE ── */
+    .tcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+    .thdr{padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+    .twrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:.81rem}
+    thead th{
+      background:rgba(255,255,255,.025);padding:.8rem 1.1rem;text-align:left;
+      color:var(--t2);font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;
+      border-bottom:1px solid var(--border);white-space:nowrap;
+    }
+    tbody tr{border-bottom:1px solid rgba(255,255,255,.035);transition:background .2s}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:rgba(255,255,255,.025)}
+    td{padding:.85rem 1.1rem;vertical-align:middle}
+    .fname{font-weight:600;color:var(--t1)}
+    .badge{display:inline-flex;align-items:center;gap:.28rem;padding:.22rem .6rem;border-radius:99px;font-size:.69rem;font-weight:600}
+    .b-blue  {background:rgba(56,189,248,.1);color:#38bdf8;border:1px solid rgba(56,189,248,.22)}
+    .b-green {background:rgba(52,211,153,.1);color:#34d399;border:1px solid rgba(52,211,153,.22)}
+    .b-amber {background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.22)}
+    .b-rose  {background:rgba(251,113,133,.1);color:#fb7185;border:1px solid rgba(251,113,133,.22)}
+    .b-violet{background:rgba(167,139,250,.1);color:#a78bfa;border:1px solid rgba(167,139,250,.22)}
+    .pbar{min-width:120px}
+    .mbar{height:5px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden;margin-top:.35rem}
+    .mfill{height:100%;border-radius:99px}
+    .rnk{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700}
+    .r1{background:rgba(251,191,36,.14);color:#fbbf24}
+    .r2{background:rgba(148,163,184,.08);color:#94a3b8}
+    .r3{background:rgba(180,110,70,.1);color:#b87333}
+    .rn{background:rgba(255,255,255,.04);color:var(--t3)}
+    /* ── FOOTER ── */
+    footer{border-top:1px solid var(--border);padding:1.25rem 2rem;max-width:1680px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+    footer p{font-size:.7rem;color:var(--t3)}
+    /* ── RESPONSIVE ── */
+    @media(max-width:1100px){.grid-2,.grid-3{grid-template-columns:1fr}}
+    @media(max-width:768px){main{padding:1rem};header{padding:0 1rem}}
+    @media(max-width:520px){.stats-grid{grid-template-columns:1fr 1fr}; .hbadge{display:none;} }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-ico" style="width:36px;height:36px;font-size:1.1rem;">⚕️</div>
+    <h2>Menu MIMO</h2>
+    <button id="closeSidebar" class="close-btn">&times;</button>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-link active">
+      <span>📊</span> Dashboard MIMO Kedah
+    </a>
+    <a href="https://sites.google.com/moh.gov.my/sistem/reten-mimo" target="_blank" class="nav-link">
+      <span>📝</span> Pendaftaran Pesakit
+    </a>
+    <a href="https://linktr.ee/BENGKELTOTMIMO" target="_blank" class="nav-link">
+      <span>📚</span> Sumber Rujukan MIMO
+    </a>
+  </nav>
+</aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="main-wrapper" id="mainWrapper">
+  
+  <header>
+    <div class="hdr">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="logo">
+        <div>
+          <h1>Dashboard MIMO Kedah</h1>
+          <p>Unit Kawalan Penyakit Tidak Berjangkit (NCD)</p></p>
+        </div>
+      </div>
+      <div class="hdiv"></div>
+      <div class="live"><div class="dot"></div><span id="tsDisplay">1 Julai 2026</span></div>
+      <div class="hbadge">🎯 Sasaran KPI: 100%</div>
+    </div>
+  </header>
+  
+  <main>
+    <div class="fbar">
+      <span class="flbl">🔍 Tapis:</span>
+      <div class="fgrp">
+        <span class="flbl">Daerah</span>
+        <select id="fDaerah" onchange="applyFilters()">
+          <option value="">Semua Daerah</option>
+        </select>
+      </div>
+      <div class="fdiv"></div>
+      <div class="fgrp">
+        <span class="flbl">Klinik Kesihatan</span>
+        <select id="fKK" onchange="applyFilters()">
+          <option value="">Semua Klinik Kesihatan</option>
+        </select>
+      </div>
+      <div class="fdiv"></div>
+      <div class="fgrp">
+        <span class="flbl">Status</span>
+        <select id="fStatus" onchange="applyFilters()">
+          <option value="">Semua Status</option>
+          <option value="AKTIF">Aktif Sahaja</option>
+        </select>
+      </div>
+      <button class="btn-reset" onclick="resetFilters()">↺ Set Semula</button>
+      <div class="fcnt" id="fcnt">— pesakit</div>
+    </div>
+    <section>
+      <div class="sec-hdr">
+        <div class="sec-ico" style="background:rgba(56,189,248,.1)">📊</div>
+        <div><h2>Ringkasan Enrolment &amp; Status</h2><small>Jumlah pesakit berdaftar dalam Program MIMO Kedah</small></div>
+      </div>
+      <div class="stats-grid">
+        <div class="scard blue">
+          <div class="sico">👥</div>
+          <div class="sval" id="sTotal">—</div>
+          <div class="slbl">Jumlah Enrolment</div>
+          <div class="ssub">📋 Keseluruhan pesakit didaftarkan</div>
+        </div>
+        <div class="scard teal">
+          <div class="sico">✅</div>
+          <div class="sval" id="sAktif">—</div>
+          <div class="slbl">Pesakit Aktif</div>
+          <div class="ssub" id="sAktifPct">—</div>
+        </div>
+        <div class="scard violet">
+          <div class="sico">🏥</div>
+          <div class="sval" id="sKK">—</div>
+          <div class="slbl">Klinik Terlibat</div>
+          <div class="ssub">📍 Klinik Kesihatan aktif</div>
+        </div>
+        <div class="scard amber">
+          <div class="sico">🗺️</div>
+          <div class="sval" id="sDaerah">—</div>
+          <div class="slbl">Daerah Terlibat</div>
+          <div class="ssub">🌏 Daerah</div>
+        </div>
+        <div class="scard green">
+          <div class="sico">🎯</div>
+          <div class="sval" id="sKPI">—%</div>
+          <div class="slbl">Pencapaian KPI</div>
+          <div class="ssub" id="sKPIsub">—</div>
+          <div class="kpi-bar-t"><div class="kpi-bar-f" id="kpiBar" style="width:0%"></div></div>
+          <div class="kpi-pct"><span>0%</span><span>Sasaran: 100%</span></div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="sec-hdr">
+        <div class="sec-ico" style="background:rgba(45,212,191,.1)">🔬</div>
+        <div><h2>Data Asas Pesakit Aktif</h2><small>Profil klinikal dan antropometri – hanya pesakit berstatus AKTIF</small></div>
+      </div>
+      <div class="grid-2" style="margin-bottom:1.1rem">
+        <div class="ccard">
+          <div class="ctitle">Taburan Jantina</div>
+          <div class="csub">Bilangan pesakit aktif mengikut jantina</div>
+          <div class="dnut-wrap">
+            <div style="width:175px;height:175px;flex-shrink:0"><canvas id="cGender"></canvas></div>
+            <div class="dlegend" id="lgGender"></div>
+          </div>
+        </div>
+        <div class="ccard">
+          <div class="ctitle">Kategori Indeks Jisim Badan (BMI)</div>
+          <div class="csub">Klasifikasi WHO Asia Pacific — pesakit aktif sahaja</div>
+          <div class="bstack" id="bmiStack"></div>
+        </div>
+      </div>
+      <div class="grid-3" style="margin-bottom:1.1rem">
+        <div class="ccard">
+          <div class="ctitle">Ukur Lilit Pinggang</div>
+          <div class="csub">Risiko metabolik: Perempuan ≥80 cm / Lelaki ≥90 cm</div>
+          <div class="dnut-wrap" style="margin-top:.5rem">
+            <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cWC"></canvas></div>
+            <div class="dlegend" id="lgWC"></div>
+          </div>
+        </div>
+        <div class="ccard">
+          <div class="ctitle">Tekanan Darah (BP)</div>
+          <div class="csub">Klasifikasi CPG MOH Malaysia (mmHg)</div>
+          <div class="dnut-wrap" style="margin-top:.5rem">
+            <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cBP"></canvas></div>
+            <div class="dlegend" id="lgBP"></div>
+          </div>
+        </div>
+        <div class="ccard">
+          <div class="ctitle">Glukosa Darah Puasa (FBS)</div>
+          <div class="csub">Klasifikasi CPG Diabetes MOH (mmol/L)</div>
+          <div class="dnut-wrap" style="margin-top:.5rem">
+            <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cFBS"></canvas></div>
+            <div class="dlegend" id="lgFBS"></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:1.1rem">
+        <div class="ccard">
+          <div class="ctitle">Kawalan HbA1c (%)</div>
+          <div class="csub">Kategori kawalan gula darah jangka panjang (hanya pesakit ada nilai)</div>
+          <div style="height:215px;margin-top:.5rem"><canvas id="cHba1c"></canvas></div>
+        </div>
+        <div class="ccard">
+          <div class="ctitle">Profil Lipid – Total Kolesterol</div>
+          <div class="csub">Klasifikasi risiko cardiovaskular CPG MOH (mmol/L)</div>
+          <div class="dnut-wrap" style="margin-top:.5rem">
+            <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cLipid"></canvas></div>
+            <div class="dlegend" id="lgLipid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="sec-hdr">
+        <div class="sec-ico" style="background:rgba(167,139,250,.1)">🏆</div>
+        <div>
+          <h2>Pencapaian KPI Mengikut Klinik Kesihatan</h2>
+          <small>% Pesakit Aktif yang Menerima ≥1 Intervensi Rawatan Obesiti Bersepadu (MNT / Senaman / Tingkah Laku / Farmakologi / Bariatrik / Rujukan)</small>
+        </div>
+      </div>
+      <div class="ccard">
+        <div style="height:300px"><canvas id="cKpiKK"></canvas></div>
+      </div>
+    </section>
+    <section>
+      <div class="sec-hdr">
+        <div class="sec-ico" style="background:rgba(251,191,36,.1)">📋</div>
+        <div><h2>Perbandingan Klinik Kesihatan</h2><small>Disusun mengikut pencapaian KPI — data real-time dari Google Sheets</small></div>
+      </div>
+      <div class="tcard">
+        <div class="thdr">
+          <div><div class="ctitle" style="margin-bottom:0">Senarai Klinik Kesihatan MIMO Kedah</div></div>
+          <div style="font-size:.72rem;color:var(--t2)">Data: Julai 2026 &nbsp;|&nbsp; Sumber: Google Sheets MIMO KKM</div>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Klinik Kesihatan</th>
+                <th>Daerah</th>
+                <th>Enrolment</th>
+                <th>Aktif</th>
+                <th>Terima Intervensi</th>
+                <th>KPI (%)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="kkTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <footer>
+    <p>© 2026 Jabatan Kesihatan Negeri Kedah – Program MIMO (Pengurusan Obesiti Bersepadu) | Dikuasakan oleh Google Sheets API</p>
+    <p>⚠️ Data pesakit adalah sulit. Paparan terbaik dengan Chrome / Edge versi terkini.</p>
+  </footer>
+
+</div> <script>
+// ════════════════════════════════════════════════════════════
+//  SIDEBAR LOGIC
+// ════════════════════════════════════════════════════════════
+const sidebar = document.getElementById('sidebar');
+const mainWrapper = document.getElementById('mainWrapper');
+const overlay = document.getElementById('sidebarOverlay');
+const toggleBtn = document.getElementById('menuToggle');
+const closeBtn = document.getElementById('closeSidebar');
+
+function toggleSidebar() {
+  if (window.innerWidth >= 1024) {
+    // Kelakuan Desktop
+    sidebar.classList.toggle('closed');
+    mainWrapper.classList.toggle('expanded');
+  } else {
+    // Kelakuan Mobile
+    sidebar.classList.toggle('open');
+    if (sidebar.classList.contains('open')) {
+      overlay.classList.add('show');
+    } else {
+      overlay.classList.remove('show');
+    }
+  }
+}
+
+toggleBtn.addEventListener('click', toggleSidebar);
+closeBtn.addEventListener('click', toggleSidebar);
+overlay.addEventListener('click', toggleSidebar);
+
+// ════════════════════════════════════════════════════════════
+//  DATA — Diekstrak dari Google Sheets DATA KK MIMO - KEDAH
+// ════════════════════════════════════════════════════════════
+const DATA = [
+  // ── KK BANDAR SUNGAI PETANI (KUALA MUDA) ──────────────────
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   51.2,139,117,82,  4.8, null, 4.4, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   39.2,129,142,91,  8.5, 10.1, 2.9, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",45.5,120,137,95,  null, 6.5, 3.8, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",42.0,123,136,78, 12.7, 12.3, 6.4, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",44.7,112,134,108, 4.8, null, 6.1, "AKTIF","TIDAK","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",45.6,110,120,98,  9.5,  5.7, 5.1, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",34.6,103,103,81,  6.0, null, 5.4, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   43.9,135,118,87, 11.4, 10.5, 5.0, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   45.6,133,119,89,  4.9, null, 5.2, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",51.4,132,122,85,  7.3,  6.9, 4.6, "AKTIF","TIDAK","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",54.8,147,123,108,10.8, null, 4.6, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",48.8,132,123,95, 14.0, 11.4, 5.5, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",38.0,115,137,87, 18.4,  8.2, 5.3, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   63.8,159,139,98,  4.7, null, 5.7, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   40.9,126,143,95, 17.8, 12.4, 7.8, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   42.6,127,134,85,  5.6, null, 6.4, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
+  // ── KK BANDAR ALOR SETAR (KOTA SETAR) ─────────────────────
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",27.3,100,110,70,  4.8,  4.9, 5.4, "AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",34.9, 95,110,70,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",36.9,104,132,84,  4.7,  9.0, 6.0, "AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",34.1,102,118,79,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",31.1,103,115,84,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",29.2, 99,120,70,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",30.2, 82,121,91,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",39.0,108,110,70,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "LELAKI",   39.6,110,140,97,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",34.5,103,120,70,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",37.9,104,121,75,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",33.3,116,101,65,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",34.4,108,132,86,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",35.7,107,130,80,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+];
+// Column index constants
+const C = {d:0,f:1,g:2,bmi:3,wc:4,sbp:5,dbp:6,fbs:7,hba1c:8,chol:9,status:10,mnt:11,sen:12,tb:13,farm:14,bar:15,ruj:16};
+// ── Chart.js globals ──
+Chart.defaults.color        = '#94a3b8';
+Chart.defaults.borderColor  = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family  = 'Inter';
+let _charts = {};
+// ── Boot ──
+document.addEventListener('DOMContentLoaded', () => {
+  populateDropdowns();
+  applyFilters();
+});
+function populateDropdowns() {
+  const daerahs = [...new Set(DATA.map(r=>r[C.d]))].sort();
+  const kks     = [...new Set(DATA.map(r=>r[C.f]))].sort();
+  const selD = document.getElementById('fDaerah');
+  const selK = document.getElementById('fKK');
+  daerahs.forEach(v => selD.appendChild(new Option(v,v)));
+  kks.forEach(v     => selK.appendChild(new Option(v,v)));
+}
+function applyFilters() {
+  const fd = document.getElementById('fDaerah').value;
+  const fk = document.getElementById('fKK').value;
+  const fs = document.getElementById('fStatus').value;
+  const filtered = DATA.filter(r =>
+    (!fd || r[C.d]===fd) &&
+    (!fk || r[C.f]===fk) &&
+    (!fs || r[C.status]===fs)
+  );
+  const active = filtered.filter(r => r[C.status]==='AKTIF');
+  document.getElementById('fcnt').textContent = `${filtered.length} pesakit dipaparkan`;
+  renderStats(filtered, active);
+  renderGender(active);
+  renderBMI(active);
+  renderWC(active);
+  renderBP(active);
+  renderFBS(active);
+  renderHba1c(active);
+  renderLipid(active);
+  renderKpiChart(filtered);
+  renderKKTable(filtered);
+}
+function resetFilters() {
+  ['fDaerah','fKK','fStatus'].forEach(id => document.getElementById(id).value = '');
+  applyFilters();
+}
+// ── Intervention check (columns 11–16) ──
+function hasInt(r) {
+  return [C.mnt,C.sen,C.tb,C.farm,C.bar,C.ruj].some(i => r[i]==='YA');
+}
+// ══ STATS ══
+function renderStats(all, active) {
+  const n   = all.length;
+  const a   = active.length;
+  const pct = n>0 ? Math.round(a/n*100) : 0;
+  const kks = new Set(all.map(r=>r[C.f]));
+  const ds  = new Set(all.map(r=>r[C.d]));
+  const wInt = active.filter(r=>hasInt(r)).length;
+  const kpi  = a>0 ? Math.round(wInt/a*100) : 0;
+  set('sTotal', n);
+  set('sAktif', a);
+  set('sAktifPct', `📈 ${pct}% daripada jumlah enrolment`);
+  set('sKK', kks.size);
+  set('sDaerah', ds.size);
+  set('sKPI', kpi+'%');
+  set('sKPIsub', `${wInt} drpd ${a} pesakit aktif menerima intervensi`);
+  document.getElementById('kpiBar').style.width = kpi+'%';
+}
+function set(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+// ══ DONUT HELPER ══
+function donut(canvasId, values, colors, legendId, labels) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (_charts[canvasId]) { _charts[canvasId].destroy(); delete _charts[canvasId]; }
+  const total = values.reduce((a,b)=>a+b,0);
+  // Legend
+  const leg = document.getElementById(legendId);
+  if (leg) {
+    leg.innerHTML = '';
+    labels.forEach((lbl,i) => {
+      const pct = total>0 ? Math.round(values[i]/total*100) : 0;
+      leg.innerHTML += `<div class="li">
+        <div class="ldot" style="background:${colors[i]}"></div>
+        <span class="ltxt">${lbl}</span>
+        <span class="lval">${values[i]} <span style="color:var(--t3);font-size:.68rem">(${pct}%)</span></span>
+      </div>`;
+    });
+  }
+  if (total===0) { ctx.style.display='none'; return; }
+  ctx.style.display='';
+  _charts[canvasId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets:[{ data:values, backgroundColor:colors, borderWidth:2, borderColor:'#101828', hoverOffset:6 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, cutout:'70%',
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          callbacks: {
+            label: c => ` ${c.label}: ${c.parsed} (${total>0?Math.round(c.parsed/total*100):0}%)`
+          }
+        }
+      }
+    }
+  });
+}
+// ══ GENDER ══
+function renderGender(active) {
+  const m = active.filter(r=>r[C.g]==='LELAKI').length;
+  const f = active.filter(r=>r[C.g]==='PEREMPUAN').length;
+  donut('cGender',[m,f],['#38bdf8','#fb7185'],'lgGender',['Lelaki','Perempuan']);
+}
+// ══ BMI ══
+const BMI_CATS = [
+  {label:'Kurang Berat (<18.0)',  min:-Infinity, max:18,   col:'#6366f1'},
+  {label:'Normal (18.0–<23.0)',   min:18,        max:23,   col:'#34d399'},
+  {label:'Lebih Berat (23–<27.5)',min:23,        max:27.5, col:'#fbbf24'},
+  {label:'Obes I (27.5–<32.5)',   min:27.5,      max:32.5, col:'#fb923c'},
+  {label:'Obes II (32.5–<37.5)', min:32.5,      max:37.5, col:'#ef4444'},
+  {label:'Obes III (≥37.5)',      min:37.5,      max:Infinity, col:'#9f1239'},
+];
+function renderBMI(active) {
+  const counts = BMI_CATS.map(cat =>
+    active.filter(r => { const b=r[C.bmi]; return b!=null && b>=cat.min && b<cat.max; }).length
+  );
+  const mx = Math.max(...counts, 1);
+  const el = document.getElementById('bmiStack');
+  if (!el) return;
+  el.innerHTML = '';
+  BMI_CATS.forEach((cat,i) => {
+    const pct = Math.round(counts[i]/mx*100);
+    el.innerHTML += `<div class="brow">
+      <span class="blbl">${cat.label}</span>
+      <div class="btrack"><div class="bfill" style="width:${pct}%;background:${cat.col}"></div></div>
+      <span class="bcnt">${counts[i]}</span>
+    </div>`;
+  });
+}
+// ══ WAIST CIRCUMFERENCE ══
+function renderWC(active) {
+  let norm=0, risk=0;
+  active.forEach(r => {
+    const wc=r[C.wc], g=r[C.g];
+    if (wc==null) return;
+    const thr = g==='PEREMPUAN' ? 80 : 90;
+    if (wc < thr) norm++; else risk++;
+  });
+  donut('cWC',[norm,risk],['#34d399','#ef4444'],'lgWC',['Normal','Berisiko']);
+}
+// ══ BLOOD PRESSURE ══
+function renderBP(active) {
+  let low=0, norm=0, high=0;
+  active.forEach(r => {
+    const s=r[C.sbp], d=r[C.dbp];
+    if (s==null||d==null) return;
+    if (s<90||d<60)      low++;
+    else if (s>=140||d>=90) high++;
+    else norm++;
+  });
+  donut('cBP',[low,norm,high],['#6366f1','#34d399','#ef4444'],'lgBP',
+    ['Rendah (<90/60)','Normal (90–139/60–89)','Tinggi (≥140/90)']);
+}
+// ══ FBS (mmol/L) ══
+function renderFBS(active) {
+  let rendah=0, normal=0, praDM=0, dm=0;
+  active.forEach(r => {
+    const v=r[C.fbs]; if (v==null) return;
+    if      (v <  3.9) rendah++;
+    else if (v <= 5.5) normal++;
+    else if (v <  7.0) praDM++;
+    else               dm++;
+  });
+  donut('cFBS',[rendah,normal,praDM,dm],
+    ['#6366f1','#34d399','#fbbf24','#ef4444'],'lgFBS',
+    ['Rendah (<3.9)','Normal (3.9–5.5)','Pra-DM (5.6–6.9)','DM (≥7.0)']);
+}
+// ══ HbA1c ══
+function renderHba1c(active) {
+  const cats   = ['<6.5%','6.5–<7.0%','7.0–<10.0%','≥10.0%'];
+  const colors = ['#34d399','#fbbf24','#f97316','#ef4444'];
+  const counts = [0,0,0,0];
+  active.forEach(r => {
+    const h=r[C.hba1c]; if (h==null) return;
+    if      (h <  6.5) counts[0]++;
+    else if (h <  7.0) counts[1]++;
+    else if (h < 10.0) counts[2]++;
+    else               counts[3]++;
+  });
+  const ctx = document.getElementById('cHba1c');
+  if (!ctx) return;
+  if (_charts['cHba1c']) { _charts['cHba1c'].destroy(); }
+  _charts['cHba1c'] = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: cats,
+      datasets:[{
+        data: counts, backgroundColor: colors,
+        borderRadius:8, borderSkipped:false,
+        label: 'Bilangan Pesakit'
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{ callbacks:{ label: c => ` ${c.parsed.y} pesakit` }}
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:11}}},
+        y:{grid:{color:'rgba(255,255,255,0.05)'}, beginAtZero:true, ticks:{precision:0}}
+      }
+    }
+  });
+}
+// ══ LIPID (Total Cholesterol mmol/L) ══
+function renderLipid(active) {
+  let norm=0, border=0, high=0;
+  active.forEach(r => {
+    const c=r[C.chol]; if (c==null) return;
+    if      (c <  5.2) norm++;
+    else if (c <= 6.2) border++;
+    else               high++;
+  });
+  donut('cLipid',[norm,border,high],['#34d399','#fbbf24','#ef4444'],'lgLipid',
+    ['Normal (<5.2)','Sempadan (5.2–6.2)','Tinggi (>6.2)']);
+}
+// ══ KK DATA HELPER ══
+function getKKStats(all) {
+  const map = {};
+  all.forEach(r => {
+    const key = r[C.f];
+    if (!map[key]) map[key] = {fac:key, dar:r[C.d], total:0, aktif:0, intv:0};
+    map[key].total++;
+    if (r[C.status]==='AKTIF') {
+      map[key].aktif++;
+      if (hasInt(r)) map[key].intv++;
+    }
+  });
+  return Object.values(map).map(k => ({
+    ...k,
+    kpi: k.aktif>0 ? Math.round(k.intv/k.aktif*100) : 0
+  }));
+}
+// ══ KPI CHART ══
+function renderKpiChart(all) {
+  const data   = getKKStats(all).sort((a,b)=>b.kpi-a.kpi);
+  const labels = data.map(k => k.fac);
+  const kpis   = data.map(k => k.kpi);
+  const enroll = data.map(k => k.total);
+  const ctx = document.getElementById('cKpiKK');
+  if (!ctx) return;
+  if (_charts['cKpiKK']) _charts['cKpiKK'].destroy();
+  _charts['cKpiKK'] = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {
+          label:'KPI (%)',
+          data: kpis,
+          backgroundColor: kpis.map(v=>v>=80?'rgba(52,211,153,.75)':v>=50?'rgba(251,191,36,.75)':'rgba(239,68,68,.75)'),
+          borderRadius:8, borderSkipped:false, yAxisID:'yKPI', order:1
+        },
+        {
+          label:'Jumlah Enrolment',
+          data: enroll, type:'line',
+          borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,.08)',
+          pointBackgroundColor:'#38bdf8', pointRadius:6, pointHoverRadius:8,
+          fill:true, tension:.35, yAxisID:'yE', order:0
+        }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{position:'top', labels:{usePointStyle:true, padding:16, font:{size:12}}},
+        tooltip:{
+          callbacks:{
+            label: c => c.dataset.label==='KPI (%)'
+              ? ` KPI: ${c.parsed.y}%`
+              : ` Enrolment: ${c.parsed.y} pesakit`
+          }
+        }
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:11}}},
+        yKPI:{
+          position:'left', min:0, max:110,
+          title:{display:true, text:'KPI (%)', font:{size:11}},
+          grid:{color:'rgba(255,255,255,0.05)'},
+          ticks:{callback:v=>v+'%'}
+        },
+        yE:{
+          position:'right',
+          title:{display:true, text:'Bilangan Enrolment', font:{size:11}},
+          grid:{display:false}, beginAtZero:true,
+          ticks:{precision:0}
+        }
+      }
+    }
+  });
+}
+// ══ KK TABLE ══
+function renderKKTable(all) {
+  const data  = getKKStats(all).sort((a,b)=>b.kpi-a.kpi);
+  const tbody = document.getElementById('kkTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  data.forEach((kk,i) => {
+    const rank = i+1;
+    const rc   = rank===1?'r1':rank===2?'r2':rank===3?'r3':'rn';
+    const kc   = kk.kpi>=80?'b-green':kk.kpi>=50?'b-amber':'b-rose';
+    const ks   = kk.kpi>=80?'✅ Cemerlang':kk.kpi>=50?'⚠️ Sederhana':'❌ Perlu Ditingkat';
+    const fill = kk.kpi>=80?'#34d399':kk.kpi>=50?'#fbbf24':'#ef4444';
+    tbody.innerHTML += `
+      <tr>
+        <td><div class="rnk ${rc}">${rank}</div></td>
+        <td><div class="fname">${kk.fac}</div></td>
+        <td><span class="badge b-blue">${kk.dar}</span></td>
+        <td><strong>${kk.total}</strong></td>
+        <td>
+          <strong>${kk.aktif}</strong>
+          <span style="color:var(--t3);font-size:.7rem"> (${kk.total>0?Math.round(kk.aktif/kk.total*100):0}%)</span>
+        </td>
+        <td>${kk.intv} pesakit</td>
+        <td>
+          <div class="pbar">
+            <strong style="color:${fill}">${kk.kpi}%</strong>
+            <div class="mbar"><div class="mfill" style="width:${kk.kpi}%;background:${fill}"></div></div>
+          </div>
+        </td>
+        <td><span class="badge ${kc}">${ks}</span></td>
+      </tr>`;
+  });
+}
+</script>
+</body>
+</html>
