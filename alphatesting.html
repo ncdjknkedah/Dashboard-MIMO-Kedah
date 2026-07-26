@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard MIMO Kedah – Program Pengurusan Obesiti Bersepadu</title>
-  <meta name="description" content="Dashboard pemantauan Program MIMO (Pengurusan Obesiti Bersepadu) Kedah." />
+  <meta name="description" content="Dashboard pemantauan Program MIMO Kedah." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..800;1,14..32,300..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -237,7 +237,7 @@
         <div class="scard teal">
           <div class="sico">✅</div>
           <div class="sval" id="sAktif">—</div>
-          <div class="slbl">Pesakit Aktif</div>
+          <div class="slbl">Pesakit Aktif (Lajur GR)</div>
           <div class="ssub" id="sAktifPct">—</div>
         </div>
         <div class="scard violet">
@@ -266,12 +266,12 @@
     <section>
       <div class="sec-hdr">
         <div class="sec-ico" style="background:rgba(45,212,191,.1)">🔬</div>
-        <div><h2>Data Asas Pesakit Aktif</h2><small>Profil klinikal dan antropometri – hanya pesakit berstatus AKTIF</small></div>
+        <div><h2>Data Asas Pesakit Aktif</h2><small>Profil klinikal dan antropometri – hanya pesakit berstatus AKTIF (Lajur GR)</small></div>
       </div>
       <div class="grid-2" style="margin-bottom:1.1rem">
         <div class="ccard">
           <div class="ctitle">Taburan Jantina</div>
-          <div class="csub">Bilangan pesakit aktif mengikut jantina</div>
+          <div class="csub">Bilangan pesakit aktif mengikut jantina (Lajur N)</div>
           <div class="dnut-wrap">
             <div style="width:175px;height:175px;flex-shrink:0"><canvas id="cGender"></canvas></div>
             <div class="dlegend" id="lgGender"></div>
@@ -279,14 +279,14 @@
         </div>
         <div class="ccard">
           <div class="ctitle">Kategori Indeks Jisim Badan (BMI)</div>
-          <div class="csub">Klasifikasi WHO Asia Pacific — pesakit aktif sahaja</div>
+          <div class="csub">Klasifikasi WHO Asia Pacific — pesakit aktif (Lajur AB)</div>
           <div class="bstack" id="bmiStack"></div>
         </div>
       </div>
       <div class="grid-3" style="margin-bottom:1.1rem">
         <div class="ccard">
           <div class="ctitle">Ukur Lilit Pinggang</div>
-          <div class="csub">Risiko metabolik: Perempuan ≥80 cm / Lelaki ≥90 cm</div>
+          <div class="csub">Risiko metabolik (Lajur AC): P ≥80 cm / L ≥90 cm</div>
           <div class="dnut-wrap" style="margin-top:.5rem">
             <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cWC"></canvas></div>
             <div class="dlegend" id="lgWC"></div>
@@ -294,7 +294,7 @@
         </div>
         <div class="ccard">
           <div class="ctitle">Tekanan Darah (BP)</div>
-          <div class="csub">Klasifikasi CPG MOH Malaysia (mmHg)</div>
+          <div class="csub">Klasifikasi CPG MOH (mmHg) (Lajur AE/AF)</div>
           <div class="dnut-wrap" style="margin-top:.5rem">
             <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cBP"></canvas></div>
             <div class="dlegend" id="lgBP"></div>
@@ -302,7 +302,7 @@
         </div>
         <div class="ccard">
           <div class="ctitle">Glukosa Darah Puasa (FBS)</div>
-          <div class="csub">Klasifikasi CPG Diabetes MOH (mmol/L)</div>
+          <div class="csub">Klasifikasi CPG Diabetes MOH (mmol/L) (Lajur AK)</div>
           <div class="dnut-wrap" style="margin-top:.5rem">
             <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cFBS"></canvas></div>
             <div class="dlegend" id="lgFBS"></div>
@@ -312,12 +312,12 @@
       <div class="grid-2" style="margin-bottom:1.1rem">
         <div class="ccard">
           <div class="ctitle">Kawalan HbA1c (%)</div>
-          <div class="csub">Kategori kawalan gula darah jangka panjang (hanya pesakit ada nilai)</div>
+          <div class="csub">Kawalan gula darah (Lajur AL)</div>
           <div style="height:215px;margin-top:.5rem"><canvas id="cHba1c"></canvas></div>
         </div>
         <div class="ccard">
           <div class="ctitle">Profil Lipid – Total Kolesterol</div>
-          <div class="csub">Klasifikasi risiko cardiovaskular CPG MOH (mmol/L)</div>
+          <div class="csub">Total Kolesterol (mmol/L) (Lajur AP)</div>
           <div class="dnut-wrap" style="margin-top:.5rem">
             <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cLipid"></canvas></div>
             <div class="dlegend" id="lgLipid"></div>
@@ -331,7 +331,7 @@
         <div class="sec-ico" style="background:rgba(167,139,250,.1)">🏆</div>
         <div>
           <h2>Pencapaian KPI Mengikut Klinik Kesihatan</h2>
-          <small>% Pesakit Aktif yang Menerima ≥1 Intervensi Rawatan Obesiti Bersepadu</small>
+          <small>% Pesakit Aktif yang Menerima Intervensi Rawatan Obesiti</small>
         </div>
       </div>
       <div class="ccard">
@@ -342,12 +342,12 @@
     <section>
       <div class="sec-hdr">
         <div class="sec-ico" style="background:rgba(251,191,36,.1)">📋</div>
-        <div><h2>Perbandingan Klinik Kesihatan</h2><small>Disusun mengikut pencapaian KPI — data real-time dari Google Sheets</small></div>
+        <div><h2>Perbandingan Klinik Kesihatan</h2><small>Disusun mengikut pencapaian KPI — data terus daripada Google Sheets (Baris 8+)</small></div>
       </div>
       <div class="tcard">
         <div class="thdr">
           <div><div class="ctitle" style="margin-bottom:0">Senarai Klinik Kesihatan MIMO Kedah</div></div>
-          <div style="font-size:.72rem;color:var(--t2)" id="lastUpdatedInfo">Data Live Google Sheets</div>
+          <div style="font-size:.72rem;color:var(--t2)" id="lastUpdatedInfo">Data Real-Time Google Sheets</div>
         </div>
         <div class="twrap">
           <table>
@@ -357,7 +357,7 @@
                 <th>Klinik Kesihatan</th>
                 <th>Daerah</th>
                 <th>Enrolment</th>
-                <th>Aktif</th>
+                <th>Aktif (GR)</th>
                 <th>Terima Intervensi</th>
                 <th>KPI (%)</th>
                 <th>Status</th>
@@ -371,7 +371,7 @@
   </main>
   
   <footer>
-    <p>© 2026 Jabatan Kesihatan Negeri Kedah – Program MIMO (Pengurusan Obesiti Bersepadu) | Google Sheets Sync API</p>
+    <p>© 2026 Jabatan Kesihatan Negeri Kedah – Program MIMO (Pengurusan Obesiti Bersepadu)</p>
     <p>⚠️ Data pesakit adalah sulit. Paparan terbaik dengan Chrome / Edge versi terkini.</p>
   </footer>
 </div>
@@ -400,13 +400,26 @@ overlay.addEventListener('click', toggleSidebar);
 
 // ── GOOGLE SHEET CONFIGURATION ──
 const SPREADSHEET_ID = '1Zn7JHkTrfol2G0Sl4b0oazryk2Syhbp0Xj74HPD1PXU';
-// Ubah nama tab di bawah sekiranya nama tab dalam google sheet berbeza
-const SHEET_NAME = 'DATA'; 
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
 
 let DATA = [];
 
-const C = {d:0, f:1, g:2, bmi:3, wc:4, sbp:5, dbp:6, fbs:7, hba1c:8, chol:9, status:10, mnt:11, sen:12, tb:13, farm:14, bar:15, ruj:16};
+// Pemetaan Lajur Google Sheet Mengikut Abjad (Zero-Indexed):
+// D=3, E=4, N=13, AB=27, AC=28, AE=30, AF=31, AK=36, AL=37, AP=41, GQ=199, GR=200
+const C = {
+  d: 3,       // Lajur D: Daerah
+  f: 4,       // Lajur E: Klinik Kesihatan
+  g: 13,      // Lajur N: Jantina
+  bmi: 27,    // Lajur AB: BMI
+  wc: 28,     // Lajur AC: Ukur Lilit Pinggang
+  sbp: 30,    // Lajur AE: BP Systolic
+  dbp: 31,    // Lajur AF: BP Diastolic
+  fbs: 36,    // Lajur AK: FBS
+  hba1c: 37,  // Lajur AL: HbA1c
+  chol: 41,   // Lajur AP: Kolesterol
+  intv: 199,  // Lajur GQ: Intervensi
+  status: 200 // Lajur GR: Status Aktif
+};
 
 Chart.defaults.color        = '#94a3b8';
 Chart.defaults.borderColor  = 'rgba(255,255,255,0.06)';
@@ -417,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchGoogleSheetData();
 });
 
-// CSV Parser Helper
+// Full CSV Parser untuk elak ralat jika ada koma dalam koma
 function parseCSV(text) {
   let p = '', c = '', r = [];
   let q = false;
@@ -452,29 +465,29 @@ function fetchGoogleSheetData() {
     })
     .then(csvText => {
       const parsedRows = parseCSV(csvText);
-      // Buang header (baris 1)
-      const rows = parsedRows.slice(1);
       
-      DATA = rows.map(r => {
-        return [
-          r[0] ? r[0].trim().toUpperCase() : '',             // Daerah
-          r[1] ? r[1].trim().toUpperCase() : '',             // KK
-          r[2] ? r[2].trim().toUpperCase() : '',             // Jantina
-          parseFloat(r[3]) || null,                          // BMI
-          parseFloat(r[4]) || null,                          // Ukur Lilit
-          parseFloat(r[5]) || null,                          // SBP
-          parseFloat(r[6]) || null,                          // DBP
-          parseFloat(r[7]) || null,                          // FBS
-          parseFloat(r[8]) || null,                          // HbA1c
-          parseFloat(r[9]) || null,                          // Chol
-          r[10] ? r[10].trim().toUpperCase() : 'TIDAK AKTIF',// Status
-          r[11] ? r[11].trim().toUpperCase() : 'TIDAK',      // MNT
-          r[12] ? r[12].trim().toUpperCase() : 'TIDAK',      // Senaman
-          r[13] ? r[13].trim().toUpperCase() : 'TIDAK',      // Tingkah Laku
-          r[14] ? r[14].trim().toUpperCase() : 'TIADA',      // Farmako
-          r[15] ? r[15].trim().toUpperCase() : 'TIDAK',      // Bariatrik
-          r[16] ? r[16].trim().toUpperCase() : 'TIDAK'       // Rujukan
-        ];
+      // Mengambil data bermula BARIS KE-8 (Indeks array 7)
+      // Baris 1-7 adalah tajuk & header
+      const dataRows = parsedRows.slice(7);
+      
+      DATA = dataRows.filter(r => r.length > C.f && r[C.f] && r[C.f].trim() !== '').map(r => {
+        const statusVal = r[C.status] ? r[C.status].trim().toUpperCase() : '';
+        const isAktif = statusVal.includes('AKTIF') && !statusVal.includes('TIDAK');
+        
+        return {
+          daerah: r[C.d] ? r[C.d].trim().toUpperCase() : '',
+          kk: r[C.f] ? r[C.f].trim().toUpperCase() : '',
+          jantina: r[C.g] ? r[C.g].trim().toUpperCase() : '',
+          bmi: parseFloat(r[C.bmi]) || null,
+          wc: parseFloat(r[C.wc]) || null,
+          sbp: parseFloat(r[C.sbp]) || null,
+          dbp: parseFloat(r[C.dbp]) || null,
+          fbs: parseFloat(r[C.fbs]) || null,
+          hba1c: parseFloat(r[C.hba1c]) || null,
+          chol: parseFloat(r[C.chol]) || null,
+          status: isAktif ? 'AKTIF' : 'TIDAK AKTIF',
+          hasIntervensi: (r[C.intv] && r[C.intv].trim().toUpperCase().includes('YA')) || false
+        };
       });
 
       const today = new Date();
@@ -485,7 +498,7 @@ function fetchGoogleSheetData() {
     })
     .catch(err => {
       console.error(err);
-      alert("Gagal memuatkan data dari Google Sheet. Sila pastikan penetapan 'Share' ditetapkan kepada 'Anyone with the link' (Viewer).");
+      alert("Gagal memuatkan data dari Google Sheet. Sila pastikan penetapan 'Share' pada Google Sheet ditetapkan kepada 'Anyone with the link' (Viewer).");
       document.getElementById('tsDisplay').textContent = "Ralat Data";
     });
 }
@@ -494,12 +507,11 @@ function populateDropdowns() {
   const selD = document.getElementById('fDaerah');
   const selK = document.getElementById('fKK');
   
-  // Clear previous options
   selD.innerHTML = '<option value="">Semua Daerah</option>';
   selK.innerHTML = '<option value="">Semua Klinik Kesihatan</option>';
 
-  const daerahs = [...new Set(DATA.map(r => r[C.d]).filter(Boolean))].sort();
-  const kks     = [...new Set(DATA.map(r => r[C.f]).filter(Boolean))].sort();
+  const daerahs = [...new Set(DATA.map(r => r.daerah).filter(Boolean))].sort();
+  const kks     = [...new Set(DATA.map(r => r.kk).filter(Boolean))].sort();
 
   daerahs.forEach(v => selD.appendChild(new Option(v, v)));
   kks.forEach(v => selK.appendChild(new Option(v, v)));
@@ -511,12 +523,12 @@ function applyFilters() {
   const fs = document.getElementById('fStatus').value;
 
   const filtered = DATA.filter(r =>
-    (!fd || r[C.d] === fd) &&
-    (!fk || r[C.f] === fk) &&
-    (!fs || r[C.status] === fs)
+    (!fd || r.daerah === fd) &&
+    (!fk || r.kk === fk) &&
+    (!fs || r.status === fs)
   );
 
-  const active = filtered.filter(r => r[C.status] === 'AKTIF');
+  const active = filtered.filter(r => r.status === 'AKTIF');
 
   document.getElementById('fcnt').textContent = `${filtered.length} pesakit dipaparkan`;
 
@@ -537,22 +549,18 @@ function resetFilters() {
   applyFilters();
 }
 
-function hasInt(r) {
-  return [C.mnt, C.sen, C.tb, C.farm, C.bar, C.ruj].some(i => r[i] === 'YA');
-}
-
 function renderStats(all, active) {
   const n = all.length;
   const a = active.length;
   const pct = n > 0 ? Math.round(a / n * 100) : 0;
-  const kks = new Set(all.map(r => r[C.f]).filter(Boolean));
-  const ds  = new Set(all.map(r => r[C.d]).filter(Boolean));
-  const wInt = active.filter(r => hasInt(r)).length;
+  const kks = new Set(all.map(r => r.kk).filter(Boolean));
+  const ds  = new Set(all.map(r => r.daerah).filter(Boolean));
+  const wInt = active.filter(r => r.hasIntervensi).length;
   const kpi  = a > 0 ? Math.round(wInt / a * 100) : 0;
 
   set('sTotal', n);
   set('sAktif', a);
-  set('sAktifPct', `📈 ${pct}% daripada jumlah enrolment`);
+  set('sAktifPct', `📈 ${pct}% daripada enrolment`);
   set('sKK', kks.size);
   set('sDaerah', ds.size);
   set('sKPI', kpi + '%');
@@ -601,8 +609,8 @@ function donut(canvasId, values, colors, legendId, labels) {
 }
 
 function renderGender(active) {
-  const m = active.filter(r => r[C.g] === 'LELAKI').length;
-  const f = active.filter(r => r[C.g] === 'PEREMPUAN').length;
+  const m = active.filter(r => r.jantina === 'LELAKI' || r.jantina === 'L').length;
+  const f = active.filter(r => r.jantina === 'PEREMPUAN' || r.jantina === 'P').length;
   donut('cGender', [m, f], ['#38bdf8', '#fb7185'], 'lgGender', ['Lelaki', 'Perempuan']);
 }
 
@@ -617,7 +625,7 @@ const BMI_CATS = [
 
 function renderBMI(active) {
   const counts = BMI_CATS.map(cat =>
-    active.filter(r => { const b = r[C.bmi]; return b != null && b >= cat.min && b < cat.max; }).length
+    active.filter(r => r.bmi != null && r.bmi >= cat.min && r.bmi < cat.max).length
   );
   const mx = Math.max(...counts, 1);
   const el = document.getElementById('bmiStack');
@@ -636,10 +644,9 @@ function renderBMI(active) {
 function renderWC(active) {
   let norm = 0, risk = 0;
   active.forEach(r => {
-    const wc = r[C.wc], g = r[C.g];
-    if (wc == null) return;
-    const thr = g === 'PEREMPUAN' ? 80 : 90;
-    if (wc < thr) norm++; else risk++;
+    if (r.wc == null) return;
+    const thr = (r.jantina === 'PEREMPUAN' || r.jantina === 'P') ? 80 : 90;
+    if (r.wc < thr) norm++; else risk++;
   });
   donut('cWC', [norm, risk], ['#34d399', '#ef4444'], 'lgWC', ['Normal', 'Berisiko']);
 }
@@ -647,10 +654,9 @@ function renderWC(active) {
 function renderBP(active) {
   let low = 0, norm = 0, high = 0;
   active.forEach(r => {
-    const s = r[C.sbp], d = r[C.dbp];
-    if (s == null || d == null) return;
-    if (s < 90 || d < 60) low++;
-    else if (s >= 140 || d >= 90) high++;
+    if (r.sbp == null || r.dbp == null) return;
+    if (r.sbp < 90 || r.dbp < 60) low++;
+    else if (r.sbp >= 140 || r.dbp >= 90) high++;
     else norm++;
   });
   donut('cBP', [low, norm, high], ['#6366f1', '#34d399', '#ef4444'], 'lgBP', ['Rendah (<90/60)', 'Normal (90–139/60–89)', 'Tinggi (≥140/90)']);
@@ -659,10 +665,10 @@ function renderBP(active) {
 function renderFBS(active) {
   let rendah = 0, normal = 0, praDM = 0, DM = 0;
   active.forEach(r => {
-    const v = r[C.fbs]; if (v == null) return;
-    if (v < 3.9) rendah++;
-    else if (v <= 5.5) normal++;
-    else if (v < 7.0) praDM++;
+    if (r.fbs == null) return;
+    if (r.fbs < 3.9) rendah++;
+    else if (r.fbs <= 5.5) normal++;
+    else if (r.fbs < 7.0) praDM++;
     else DM++;
   });
   donut('cFBS', [rendah, normal, praDM, DM], ['#6366f1', '#34d399', '#fbbf24', '#ef4444'], 'lgFBS', ['Rendah (<3.9)', 'Normal (3.9–5.5)', 'Pra DM (5.6–6.9)', 'DM (≥7.0)']);
@@ -673,10 +679,10 @@ function renderHba1c(active) {
   const colors = ['#34d399', '#fbbf24', '#f97316', '#ef4444'];
   const counts = [0, 0, 0, 0];
   active.forEach(r => {
-    const h = r[C.hba1c]; if (h == null) return;
-    if (h < 6.5) counts[0]++;
-    else if (h < 7.0) counts[1]++;
-    else if (h < 10.0) counts[2]++;
+    if (r.hba1c == null) return;
+    if (r.hba1c < 6.5) counts[0]++;
+    else if (r.hba1c < 7.0) counts[1]++;
+    else if (r.hba1c < 10.0) counts[2]++;
     else counts[3]++;
   });
   const ctx = document.getElementById('cHba1c');
@@ -702,9 +708,9 @@ function renderHba1c(active) {
 function renderLipid(active) {
   let norm = 0, border = 0, high = 0;
   active.forEach(r => {
-    const c = r[C.chol]; if (c == null) return;
-    if (c < 5.2) norm++;
-    else if (c <= 6.2) border++;
+    if (r.chol == null) return;
+    if (r.chol < 5.2) norm++;
+    else if (r.chol <= 6.2) border++;
     else high++;
   });
   donut('cLipid', [norm, border, high], ['#34d399', '#fbbf24', '#ef4444'], 'lgLipid', ['Normal (<5.2)', 'Sempadan (5.2–6.2)', 'Tinggi (>6.2)']);
@@ -713,13 +719,13 @@ function renderLipid(active) {
 function getKKStats(all) {
   const map = {};
   all.forEach(r => {
-    const key = r[C.f];
+    const key = r.kk;
     if(!key) return;
-    if (!map[key]) map[key] = { fac: key, dar: r[C.d], total: 0, aktif: 0, intv: 0 };
+    if (!map[key]) map[key] = { fac: key, dar: r.daerah, total: 0, aktif: 0, intv: 0 };
     map[key].total++;
-    if (r[C.status] === 'AKTIF') {
+    if (r.status === 'AKTIF') {
       map[key].aktif++;
-      if (hasInt(r)) map[key].intv++;
+      if (r.hasIntervensi) map[key].intv++;
     }
   });
   return Object.values(map).map(k => ({
