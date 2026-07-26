@@ -4,29 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard MIMO Kedah – Program Pengurusan Obesiti Bersepadu</title>
-  <meta name="description" content="Dashboard pemantauan Program MIMO Kedah." />
+  <meta name="description" content="Dashboard pemantauan Program MIMO (Pengurusan Obesiti Bersepadu) Kedah." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..800;1,14..32,300..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --bg:        #070c18;
-      --bg2:       #0c1320;
-      --card:      #101828;
-      --card2:     #19243a;
-      --border:    rgba(99,179,237,0.10);
-      --border-g:  rgba(99,179,237,0.28);
-      --c-blue:    #38bdf8;
-      --c-teal:    #2dd4bf;
-      --c-violet:  #a78bfa;
-      --c-rose:    #fb7185;
-      --c-amber:   #fbbf24;
-      --c-green:   #34d399;
-      --c-orange:  #fb923c;
-      --t1: #eef4ff;
-      --t2: #94a3b8;
-      --t3: #4b5c73;
+      --bg:        #070c18; --bg2:       #0c1320;
+      --card:      #101828; --card2:     #19243a;
+      --border:    rgba(99,179,237,0.10); --border-g:  rgba(99,179,237,0.28);
+      --c-blue:    #38bdf8; --c-teal:    #2dd4bf; --c-violet:  #a78bfa;
+      --c-rose:    #fb7185; --c-amber:   #fbbf24; --c-green:   #34d399; --c-orange:  #fb923c;
+      --t1: #eef4ff; --t2: #94a3b8; --t3: #4b5c73;
       --g-blue:   linear-gradient(135deg,#0ea5e9,#6366f1);
       --g-teal:   linear-gradient(135deg,#14b8a6,#06b6d4);
       --g-violet: linear-gradient(135deg,#8b5cf6,#ec4899);
@@ -188,7 +178,7 @@
         </div>
       </div>
       <div class="hdiv"></div>
-      <div class="live"><div class="dot"></div><span id="tsDisplay">Sedang memuatkan data...</span></div>
+      <div class="live"><div class="dot"></div><span id="tsDisplay">Sedang memuatkan data Google Sheet...</span></div>
       <div class="hbadge">🎯 Sasaran KPI: 100%</div>
     </div>
   </header>
@@ -225,33 +215,33 @@
       <div class="stats-grid">
         <div class="scard blue">
           <div class="sico">👥</div>
-          <div class="sval" id="sTotal">—</div>
+          <div class="sval" id="sTotal">0</div>
           <div class="slbl">Jumlah Enrolment</div>
           <div class="ssub">📋 Keseluruhan pesakit didaftarkan</div>
         </div>
         <div class="scard teal">
           <div class="sico">✅</div>
-          <div class="sval" id="sAktif">—</div>
+          <div class="sval" id="sAktif">0</div>
           <div class="slbl">Pesakit Aktif (Lajur GR)</div>
-          <div class="ssub" id="sAktifPct">—</div>
+          <div class="ssub" id="sAktifPct">0% daripada enrolment</div>
         </div>
         <div class="scard violet">
           <div class="sico">🏥</div>
-          <div class="sval" id="sKK">—</div>
+          <div class="sval" id="sKK">0</div>
           <div class="slbl">Klinik Terlibat</div>
           <div class="ssub">📍 Klinik Kesihatan aktif</div>
         </div>
         <div class="scard amber">
           <div class="sico">🗺️</div>
-          <div class="sval" id="sDaerah">—</div>
+          <div class="sval" id="sDaerah">0</div>
           <div class="slbl">Daerah Terlibat</div>
           <div class="ssub">🌏 Daerah</div>
         </div>
         <div class="scard green">
           <div class="sico">🎯</div>
-          <div class="sval" id="sKPI">—%</div>
+          <div class="sval" id="sKPI">0%</div>
           <div class="slbl">Pencapaian KPI</div>
-          <div class="ssub" id="sKPIsub">—</div>
+          <div class="ssub" id="sKPIsub">0 drpd 0 pesakit aktif menerima intervensi</div>
           <div class="kpi-bar-t"><div class="kpi-bar-f" id="kpiBar" style="width:0%"></div></div>
           <div class="kpi-pct"><span>0%</span><span>Sasaran: 100%</span></div>
         </div>
@@ -342,7 +332,7 @@
       <div class="tcard">
         <div class="thdr">
           <div><div class="ctitle" style="margin-bottom:0">Senarai Klinik Kesihatan MIMO Kedah</div></div>
-          <div style="font-size:.72rem;color:var(--t2)" id="lastUpdatedInfo">Data Real-Time Google Sheets API</div>
+          <div style="font-size:.72rem;color:var(--t2)">Tarikh Akses: <span id="lastUpdatedInfo">Data Live Google Sheets API</span></div>
         </div>
         <div class="twrap">
           <table>
@@ -395,12 +385,18 @@ overlay.addEventListener('click', toggleSidebar);
 
 // ── GOOGLE SHEET CONFIGURATION ──
 const SPREADSHEET_ID = '1Zn7JHkTrfol2G0Sl4b0oazryk2Syhbp0Xj74HPD1PXU';
-// URL ini menukar sheet ke dalam format CSV secara automatik
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
+
+// PERHATIAN: Biarkan kosong jika data berada di Tab Pertama (kiri sekali). 
+// Jika berada di tab lain, tuliskan nama tab tersebut (Contoh: 'DATA MIMO')
+const NAMA_TAB_SHEET = ''; 
+
+// Membina pautan URL yang sah untuk eksport CSV
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv` + 
+                  (NAMA_TAB_SHEET ? `&sheet=${encodeURIComponent(NAMA_TAB_SHEET)}` : '');
 
 let DATA = [];
 
-// Index Lajur (Berdasarkan indeks bermula dari 0)
+// Pemetaan Indeks Lajur Google Sheet (Bermula dari 0 = A)
 // D=3, E=4, N=13, AB=27, AC=28, AE=30, AF=31, AK=36, AL=37, AP=41, GQ=198, GR=199
 const C = {
   d: 3,       // Lajur D: Daerah
@@ -426,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchGoogleSheetData();
 });
 
-// Fungsi parser untuk membaca data CSV Google Sheets (Menguruskan teks dalam koma)
+// CSV Parser yang tahan ralat
 function parseCSV(text) {
   let r = [], row = [], p = '', c = '', q = false;
   row[0] = '';
@@ -441,7 +437,7 @@ function parseCSV(text) {
     } else if (c === '\n' && !q) {
       r.push(row); row = [''];
     } else if (c === '\r' && !q) {
-      // Abaikan character return line
+      // Abaikan character return
     } else {
       row[row.length - 1] += c;
     }
@@ -461,24 +457,30 @@ function fetchGoogleSheetData() {
     .then(csvText => {
       const parsedRows = parseCSV(csvText);
       
-      // Data bermula dari BARIS KE-8 (Indeks Array 7) 
+      // Lihat Data dalam Console F12 untuk debug
+      console.log("Data CSV Diterima:", parsedRows.length, "baris");
+      
+      // Mengambil data bermula BARIS KE-8 (Indeks Array 7) 
       const dataRows = parsedRows.slice(7);
       
-      // Membina objek DATA seragam
+      // Saring baris yang tiada nama Klinik (Lajur E) dan masukkan ke dalam tatasusunan seragam
       DATA = dataRows.filter(r => r.length > C.f && r[C.f] && r[C.f].trim() !== '').map(r => {
-        // Jika data kurang panjang lajurnya, kita tambah placeholder ''
-        while(r.length <= 200) r.push('');
         
-        const statusVal = (r[C.status] || '').trim().toUpperCase();
+        // PAD ARRAY: Inilah penyelesaian bagi isu data 0 anda!
+        // Sekiranya sel di hujung sheet kosong, Google API akan memendekkan panjang (length) array.
+        // Skrip ini memaksa array menjadi sekurang-kurangnya 205 sel panjang (meliputi hingga lajur GR)
+        while (r.length <= 205) r.push('');
+        
+        const statusVal = r[C.status].trim().toUpperCase();
         const isAktif = statusVal.includes('AKTIF') && !statusVal.includes('TIDAK');
         
-        const intvVal = (r[C.intv] || '').trim().toUpperCase();
+        const intvVal = r[C.intv].trim().toUpperCase();
         const hasIntv = intvVal.includes('YA') || (intvVal !== '' && intvVal !== 'TIADA' && intvVal !== 'TIDAK');
 
         return {
-          daerah: (r[C.d] || '').trim().toUpperCase(),
-          kk: (r[C.f] || '').trim().toUpperCase(),
-          jantina: (r[C.g] || '').trim().toUpperCase(),
+          daerah: r[C.d].trim().toUpperCase(),
+          kk: r[C.f].trim().toUpperCase(),
+          jantina: r[C.g].trim().toUpperCase(),
           bmi: parseFloat(r[C.bmi]) || null,
           wc: parseFloat(r[C.wc]) || null,
           sbp: parseFloat(r[C.sbp]) || null,
@@ -491,16 +493,19 @@ function fetchGoogleSheetData() {
         };
       });
 
+      console.log("Data Pesakit Selepas Saringan:", DATA.length, "pesakit");
+
       const today = new Date();
-      document.getElementById('tsDisplay').textContent = today.toLocaleDateString('ms-MY', { day:'numeric', month:'long', year:'numeric'});
+      document.getElementById('tsDisplay').textContent = today.toLocaleDateString('ms-MY', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      document.getElementById('lastUpdatedInfo').textContent = today.toLocaleDateString('ms-MY');
       
       populateDropdowns();
       applyFilters();
     })
     .catch(err => {
       console.error("API Error:", err);
-      alert("Sila pastikan Google Sheet telah disetkan akses kepada: 'Anyone with the link' > Viewer.");
-      document.getElementById('tsDisplay').textContent = "Ralat Akses Sheet Private";
+      alert("Ralat Akses Google Sheet. Pastikan pautan Google Sheet berstatus 'Anyone with the link'.");
+      document.getElementById('tsDisplay').textContent = "Ralat Data Sheet";
     });
 }
 
