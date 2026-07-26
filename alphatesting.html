@@ -41,12 +41,7 @@
     ::-webkit-scrollbar-track{background:var(--bg)}
     ::-webkit-scrollbar-thumb{background:var(--t3);border-radius:99px}
     
-    .sidebar {
-      position: fixed; top: 0; left: -280px; width: 280px; height: 100vh;
-      background: var(--card2); border-right: 1px solid var(--border);
-      z-index: 1000; transition: left 0.3s ease; display: flex; flex-direction: column;
-      box-shadow: 4px 0 24px rgba(0,0,0,0.5);
-    }
+    .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100vh; background: var(--card2); border-right: 1px solid var(--border); z-index: 1000; transition: left 0.3s ease; display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
     .sidebar.open { left: 0; }
     .sidebar-header { padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 0.8rem; border-bottom: 1px solid var(--border); height: 69px; }
     .sidebar-header h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--t1); }
@@ -347,7 +342,7 @@
       <div class="tcard">
         <div class="thdr">
           <div><div class="ctitle" style="margin-bottom:0">Senarai Klinik Kesihatan MIMO Kedah</div></div>
-          <div style="font-size:.72rem;color:var(--t2)" id="lastUpdatedInfo">Data Real-Time Google Sheets</div>
+          <div style="font-size:.72rem;color:var(--t2)" id="lastUpdatedInfo">Data Real-Time Google Sheets API</div>
         </div>
         <div class="twrap">
           <table>
@@ -400,12 +395,13 @@ overlay.addEventListener('click', toggleSidebar);
 
 // ── GOOGLE SHEET CONFIGURATION ──
 const SPREADSHEET_ID = '1Zn7JHkTrfol2G0Sl4b0oazryk2Syhbp0Xj74HPD1PXU';
+// URL ini menukar sheet ke dalam format CSV secara automatik
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
 
 let DATA = [];
 
-// Pemetaan Lajur Google Sheet Mengikut Abjad (Zero-Indexed):
-// D=3, E=4, N=13, AB=27, AC=28, AE=30, AF=31, AK=36, AL=37, AP=41, GQ=199, GR=200
+// Index Lajur (Berdasarkan indeks bermula dari 0)
+// D=3, E=4, N=13, AB=27, AC=28, AE=30, AF=31, AK=36, AL=37, AP=41, GQ=198, GR=199
 const C = {
   d: 3,       // Lajur D: Daerah
   f: 4,       // Lajur E: Klinik Kesihatan
@@ -417,8 +413,8 @@ const C = {
   fbs: 36,    // Lajur AK: FBS
   hba1c: 37,  // Lajur AL: HbA1c
   chol: 41,   // Lajur AP: Kolesterol
-  intv: 199,  // Lajur GQ: Intervensi
-  status: 200 // Lajur GR: Status Aktif
+  intv: 198,  // Lajur GQ: Intervensi (MNT/dll)
+  status: 199 // Lajur GR: Status (AKTIF)
 };
 
 Chart.defaults.color        = '#94a3b8';
@@ -430,11 +426,10 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchGoogleSheetData();
 });
 
-// Full CSV Parser untuk elak ralat jika ada koma dalam koma
+// Fungsi parser untuk membaca data CSV Google Sheets (Menguruskan teks dalam koma)
 function parseCSV(text) {
-  let p = '', c = '', r = [];
-  let q = false;
-  let row = [''];
+  let r = [], row = [], p = '', c = '', q = false;
+  row[0] = '';
   for (let i = 0; i < text.length; i++) {
     c = text[i];
     p = text[i-1];
@@ -443,41 +438,47 @@ function parseCSV(text) {
       else { q = !q; }
     } else if (c === ',' && !q) {
       row.push('');
-    } else if ((c === '\r' || c === '\n') && !q) {
-      if (p === '\r' && c === '\n') { continue; }
-      r.push(row);
-      row = [''];
+    } else if (c === '\n' && !q) {
+      r.push(row); row = [''];
+    } else if (c === '\r' && !q) {
+      // Abaikan character return line
     } else {
       row[row.length - 1] += c;
     }
   }
-  if (row.length > 1 || row[0] !== '') { r.push(row); }
+  r.push(row);
   return r;
 }
 
 function fetchGoogleSheetData() {
-  document.getElementById('tsDisplay').textContent = "Kemaskini Data...";
+  document.getElementById('tsDisplay').textContent = "Mengambil data...";
   
   fetch(SHEET_URL)
     .then(res => {
-      if(!res.ok) throw new Error("Gagal mengambil data dari Google Sheets");
+      if(!res.ok) throw new Error("Gagal menyambung ke Google Sheets.");
       return res.text();
     })
     .then(csvText => {
       const parsedRows = parseCSV(csvText);
       
-      // Mengambil data bermula BARIS KE-8 (Indeks array 7)
-      // Baris 1-7 adalah tajuk & header
+      // Data bermula dari BARIS KE-8 (Indeks Array 7) 
       const dataRows = parsedRows.slice(7);
       
+      // Membina objek DATA seragam
       DATA = dataRows.filter(r => r.length > C.f && r[C.f] && r[C.f].trim() !== '').map(r => {
-        const statusVal = r[C.status] ? r[C.status].trim().toUpperCase() : '';
+        // Jika data kurang panjang lajurnya, kita tambah placeholder ''
+        while(r.length <= 200) r.push('');
+        
+        const statusVal = (r[C.status] || '').trim().toUpperCase();
         const isAktif = statusVal.includes('AKTIF') && !statusVal.includes('TIDAK');
         
+        const intvVal = (r[C.intv] || '').trim().toUpperCase();
+        const hasIntv = intvVal.includes('YA') || (intvVal !== '' && intvVal !== 'TIADA' && intvVal !== 'TIDAK');
+
         return {
-          daerah: r[C.d] ? r[C.d].trim().toUpperCase() : '',
-          kk: r[C.f] ? r[C.f].trim().toUpperCase() : '',
-          jantina: r[C.g] ? r[C.g].trim().toUpperCase() : '',
+          daerah: (r[C.d] || '').trim().toUpperCase(),
+          kk: (r[C.f] || '').trim().toUpperCase(),
+          jantina: (r[C.g] || '').trim().toUpperCase(),
           bmi: parseFloat(r[C.bmi]) || null,
           wc: parseFloat(r[C.wc]) || null,
           sbp: parseFloat(r[C.sbp]) || null,
@@ -486,7 +487,7 @@ function fetchGoogleSheetData() {
           hba1c: parseFloat(r[C.hba1c]) || null,
           chol: parseFloat(r[C.chol]) || null,
           status: isAktif ? 'AKTIF' : 'TIDAK AKTIF',
-          hasIntervensi: (r[C.intv] && r[C.intv].trim().toUpperCase().includes('YA')) || false
+          hasIntervensi: hasIntv
         };
       });
 
@@ -497,9 +498,9 @@ function fetchGoogleSheetData() {
       applyFilters();
     })
     .catch(err => {
-      console.error(err);
-      alert("Gagal memuatkan data dari Google Sheet. Sila pastikan penetapan 'Share' pada Google Sheet ditetapkan kepada 'Anyone with the link' (Viewer).");
-      document.getElementById('tsDisplay').textContent = "Ralat Data";
+      console.error("API Error:", err);
+      alert("Sila pastikan Google Sheet telah disetkan akses kepada: 'Anyone with the link' > Viewer.");
+      document.getElementById('tsDisplay').textContent = "Ralat Akses Sheet Private";
     });
 }
 
