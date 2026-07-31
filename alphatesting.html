@@ -1037,9 +1037,9 @@ function handleLoadSuccess(source, response) {
     const rows = response.table.rows;
     const records = [];
     
-    rows.forEach((r) => {
+    rows.forEach((r, rowIndex) => {
       if (!r || !r.c) return;
-      const parsedRecord = parseRowObject(r.c, source.daerah, source.kk);
+      const parsedRecord = parseRowObject(r.c, rowIndex, source.daerah, source.kk);
       if (parsedRecord) {
         records.push(parsedRecord);
       }
@@ -1056,7 +1056,15 @@ function handleLoadSuccess(source, response) {
   }
 }
 
-function parseRowObject(cells, fallbackDaerah, fallbackKK) {
+function parseRowObject(cells, rowIndex, fallbackDaerah, fallbackKK) {
+  // STRICT START AT SHEET ROW 8:
+  // Google Viz API treats Sheet Row 1 as Column Labels.
+  // rowIndex 0 = Sheet Row 2, ..., rowIndex 5 = Sheet Row 7 (Header).
+  // Therefore, Sheet Row 8 corresponds EXACTLY to rowIndex >= 6.
+  if (rowIndex < 6) {
+    return null;
+  }
+
   const getVal = (colLet) => {
     const idx = colToIdx(colLet);
     if (!cells[idx]) return '';
@@ -1074,16 +1082,9 @@ function parseRowObject(cells, fallbackDaerah, fallbackKK) {
 
   // Check Column G (Nama Pesakit)
   const enrolmentG = getVal('G');
-  const enrolmentGUpper = enrolmentG.toUpperCase();
-
-  // DYNAMIC HEADER FILTERING:
-  // Skip any header rows, title strings, or blank rows in Column G
-  if (!enrolmentG || 
-      enrolmentGUpper === 'NAMA' || 
-      enrolmentGUpper === 'NAMA PESAKIT' || 
-      enrolmentGUpper.includes('PROGRAM') || 
-      enrolmentGUpper.includes('PENYELARAS') ||
-      getVal('B').toUpperCase() === 'DAERAH') {
+  
+  // Skip blank rows where Column G is empty
+  if (!enrolmentG) {
     return null;
   }
 
