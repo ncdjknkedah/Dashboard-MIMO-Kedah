@@ -628,7 +628,7 @@
           <div class="sico">👥</div>
           <div class="sval" id="sTotal">—</div>
           <div class="slbl">Jumlah Enrolment</div>
-          <div class="ssub">📋 Pesakit Berdaftar (Kolum G)</div>
+          <div class="ssub">📋 Pesakit Berdaftar Sah</div>
         </div>
         <div class="scard teal">
           <div class="sico">✅</div>
@@ -815,7 +815,7 @@
           </div>
           <div class="form-col">
             <label>Klinik Kesihatan</label>
-            <input type="text" id="addKK" placeholder="Contoh: KK BANDAR ALOR SETAR" required />
+            <input type="text" id="addKK" placeholder="Contoh: KLINIK KESIHATAN BANDAR ALOR SETAR" required />
           </div>
         </div>
         <div class="form-row" style="margin-top:0.8rem;">
@@ -921,25 +921,22 @@ function parseSheetUrl(url) {
 }
 
 // ════════════════════════════════════════════════════════════
-//  TEXT SANITIZER (FIX CONCATENATED / REPETITIVE VALUES)
+//  TEXT SANITIZER
 // ════════════════════════════════════════════════════════════
 function sanitizeFacilityName(rawStr, fallbackKK) {
   if (!rawStr) return fallbackKK.toUpperCase();
   let str = rawStr.trim().toUpperCase();
   
-  // Clean repeating phrases (e.g., "KLINIK KESIHATAN BANDAR ALOR SETARKLINIK KESIHATAN...")
   const match = str.match(/(KLINIK KESIHATAN [A-Z0-9\s.-]+?)\1+/i);
   if (match && match[1]) {
     return match[1].trim();
   }
   
-  // General repeating string detection
   const generalMatch = str.match(/^(.{5,35}?)\1+$/);
   if (generalMatch && generalMatch[1]) {
     return generalMatch[1].trim();
   }
 
-  // If text is overly long (> 60 chars) or corrupted, use fallbackKK
   if (str.length > 60 || str.includes("KLINIK KESIHATAN KLINIK KESIHATAN")) {
     return fallbackKK.toUpperCase();
   }
@@ -966,7 +963,7 @@ function sanitizeDaerahName(rawStr, fallbackDaerah) {
 // ════════════════════════════════════════════════════════════
 //  DATA LOADER & PARSER ENGINE
 // ════════════════════════════════════════════════════════════
-const DATA = []; // Holds structured objects
+const DATA = []; 
 let activeLoads = 0;
 let fetchedDataList = [];
 let loadErrors = [];
@@ -1040,7 +1037,6 @@ function handleLoadSuccess(source, response) {
     const rows = response.table.rows;
     const records = [];
     
-    // Data starts at Row 8 in Google Sheets
     rows.forEach((r) => {
       if (!r || !r.c) return;
       const parsedRecord = parseRowObject(r.c, source.daerah, source.kk);
@@ -1076,7 +1072,23 @@ function parseRowObject(cells, fallbackDaerah, fallbackKK) {
     return isNaN(num) ? null : num;
   };
 
-  // Clean raw Daerah and KK names to remove repetitive text
+  // 1. STRICT VALIDATION ON GENDER (Column L):
+  // A genuine patient record MUST have a valid gender filled in Column L.
+  // Template blank rows (e.g. rows 27-29) will not have a gender.
+  const jantinaRaw = getVal('L').toUpperCase();
+  let jantina = null;
+  if (jantinaRaw.includes('LELAKI') || jantinaRaw === 'L' || jantinaRaw === 'MALE') {
+    jantina = 'LELAKI';
+  } else if (jantinaRaw.includes('PEREMPUAN') || jantinaRaw === 'P' || jantinaRaw === 'FEMALE') {
+    jantina = 'PEREMPUAN';
+  }
+
+  // If gender is empty or invalid, this is a header, title, or blank template row -> SKIP IT!
+  if (!jantina) {
+    return null;
+  }
+
+  // Clean raw Daerah and KK names
   let rawDaerah = getVal('B');
   let rawKK = getVal('C');
 
@@ -1085,18 +1097,9 @@ function parseRowObject(cells, fallbackDaerah, fallbackKK) {
 
   const enrolmentG = getVal('G');
 
-  // Skip header lines or blank patient records
-  if (!enrolmentG || daerah === 'DAERAH' || enrolmentG.toUpperCase().includes('PENDAFTARAN')) {
+  // Skip header titles
+  if (enrolmentG.toUpperCase().includes('PENDAFTARAN') || daerah === 'DAERAH') {
     return null;
-  }
-
-  // Gender (Column L)
-  const jantinaRaw = getVal('L').toUpperCase();
-  let jantina = 'LAIN-LAIN';
-  if (jantinaRaw.includes('LELAKI') || jantinaRaw === 'L' || jantinaRaw === 'MALE') {
-    jantina = 'LELAKI';
-  } else if (jantinaRaw.includes('PEREMPUAN') || jantinaRaw === 'P' || jantinaRaw === 'FEMALE') {
-    jantina = 'PEREMPUAN';
   }
 
   // Anthropometry & Clinical Data
