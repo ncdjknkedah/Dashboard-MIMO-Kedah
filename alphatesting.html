@@ -640,7 +640,7 @@
           <div class="sico">🏥</div>
           <div class="sval" id="sKK">—</div>
           <div class="slbl">Klinik Terlibat</div>
-          <div class="ssub">📍 Bilangan Google Sheets</div>
+          <div class="ssub">📍 Bilangan Fasiliti Active</div>
         </div>
         <div class="scard amber">
           <div class="sico">🗺️</div>
@@ -871,12 +871,12 @@ const CONFIG_KEY = 'mimo_dashboard_sources';
 const DEFAULT_SOURCES = [
   {
     daerah: "KOTA SETAR",
-    kk: "KK BANDAR ALOR SETAR",
+    kk: "KLINIK KESIHATAN BANDAR ALOR SETAR",
     url: "https://docs.google.com/spreadsheets/d/1C3DOYqb1kd1tJdIeEYgTQkOMbtsR3Xz86V1Mq7Yy8pA/edit?gid=0#gid=0"
   },
   {
     daerah: "KUALA MUDA",
-    kk: "KK BANDAR SUNGAI PETANI",
+    kk: "KLINIK KESIHATAN BANDAR SUNGAI PETANI",
     url: "https://docs.google.com/spreadsheets/d/1cpAFhB1Eb0InvvhG238chpS1Xl6e9EnqF0HH0mn_Uo0/edit?gid=0#gid=0"
   }
 ];
@@ -918,6 +918,49 @@ function parseSheetUrl(url) {
   const gid = gidMatch ? gidMatch[1] : '0';
   
   return { id, gid };
+}
+
+// ════════════════════════════════════════════════════════════
+//  TEXT SANITIZER (FIX CONCATENATED / REPETITIVE VALUES)
+// ════════════════════════════════════════════════════════════
+function sanitizeFacilityName(rawStr, fallbackKK) {
+  if (!rawStr) return fallbackKK.toUpperCase();
+  let str = rawStr.trim().toUpperCase();
+  
+  // Clean repeating phrases (e.g., "KLINIK KESIHATAN BANDAR ALOR SETARKLINIK KESIHATAN...")
+  const match = str.match(/(KLINIK KESIHATAN [A-Z0-9\s.-]+?)\1+/i);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  
+  // General repeating string detection
+  const generalMatch = str.match(/^(.{5,35}?)\1+$/);
+  if (generalMatch && generalMatch[1]) {
+    return generalMatch[1].trim();
+  }
+
+  // If text is overly long (> 60 chars) or corrupted, use fallbackKK
+  if (str.length > 60 || str.includes("KLINIK KESIHATAN KLINIK KESIHATAN")) {
+    return fallbackKK.toUpperCase();
+  }
+
+  return str;
+}
+
+function sanitizeDaerahName(rawStr, fallbackDaerah) {
+  if (!rawStr) return fallbackDaerah.toUpperCase();
+  let str = rawStr.trim().toUpperCase();
+  
+  const generalMatch = str.match(/^(.{3,20}?)\1+$/);
+  if (generalMatch && generalMatch[1]) {
+    return generalMatch[1].trim();
+  }
+
+  if (str.length > 30) {
+    return fallbackDaerah.toUpperCase();
+  }
+
+  return str;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1033,13 +1076,17 @@ function parseRowObject(cells, fallbackDaerah, fallbackKK) {
     return isNaN(num) ? null : num;
   };
 
-  // Extract key fields
-  let daerah = getVal('B').toUpperCase() || fallbackDaerah.toUpperCase();
-  let kk = getVal('C').toUpperCase() || fallbackKK.toUpperCase();
+  // Clean raw Daerah and KK names to remove repetitive text
+  let rawDaerah = getVal('B');
+  let rawKK = getVal('C');
+
+  let daerah = sanitizeDaerahName(rawDaerah, fallbackDaerah);
+  let kk = sanitizeFacilityName(rawKK, fallbackKK);
+
   const enrolmentG = getVal('G');
 
-  // Filter out headers, empty rows, or invalid rows before row 8
-  if (!enrolmentG || daerah === 'DAERAH' || kk === 'KLINIK KESIHATAN' || enrolmentG.toUpperCase().includes('PENDAFTARAN')) {
+  // Skip header lines or blank patient records
+  if (!enrolmentG || daerah === 'DAERAH' || enrolmentG.toUpperCase().includes('PENDAFTARAN')) {
     return null;
   }
 
