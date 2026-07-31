@@ -628,7 +628,7 @@
           <div class="sico">👥</div>
           <div class="sval" id="sTotal">—</div>
           <div class="slbl">Jumlah Enrolment</div>
-          <div class="ssub">📋 Pesakit Berdaftar Sah</div>
+          <div class="ssub">📋 Dikira dari Kolum G (Baris 8+)</div>
         </div>
         <div class="scard teal">
           <div class="sico">✅</div>
@@ -1037,9 +1037,11 @@ function handleLoadSuccess(source, response) {
     const rows = response.table.rows;
     const records = [];
     
-    rows.forEach((r) => {
+    // Process every row from Google Sheets
+    rows.forEach((r, rowIndex) => {
       if (!r || !r.c) return;
-      const parsedRecord = parseRowObject(r.c, source.daerah, source.kk);
+      // rowIndex 0 = Row 1, rowIndex 7 = Row 8 in Google Sheets
+      const parsedRecord = parseRowObject(r.c, rowIndex, source.daerah, source.kk);
       if (parsedRecord) {
         records.push(parsedRecord);
       }
@@ -1056,7 +1058,12 @@ function handleLoadSuccess(source, response) {
   }
 }
 
-function parseRowObject(cells, fallbackDaerah, fallbackKK) {
+function parseRowObject(cells, rowIndex, fallbackDaerah, fallbackKK) {
+  // 1. STRICT START AT ROW 8 (rowIndex 7 = Sheet Row 8):
+  if (rowIndex < 7) {
+    return null;
+  }
+
   const getVal = (colLet) => {
     const idx = colToIdx(colLet);
     if (!cells[idx]) return '';
@@ -1072,19 +1079,11 @@ function parseRowObject(cells, fallbackDaerah, fallbackKK) {
     return isNaN(num) ? null : num;
   };
 
-  // 1. STRICT VALIDATION ON GENDER (Column L):
-  // A genuine patient record MUST have a valid gender filled in Column L.
-  // Template blank rows (e.g. rows 27-29) will not have a gender.
-  const jantinaRaw = getVal('L').toUpperCase();
-  let jantina = null;
-  if (jantinaRaw.includes('LELAKI') || jantinaRaw === 'L' || jantinaRaw === 'MALE') {
-    jantina = 'LELAKI';
-  } else if (jantinaRaw.includes('PEREMPUAN') || jantinaRaw === 'P' || jantinaRaw === 'FEMALE') {
-    jantina = 'PEREMPUAN';
-  }
+  // 2. PRIMARY ENROLMENT CHECK (Column G - Nama Pesakit / No. Pendaftaran):
+  const enrolmentG = getVal('G');
 
-  // If gender is empty or invalid, this is a header, title, or blank template row -> SKIP IT!
-  if (!jantina) {
+  // Must have a non-empty string in Column G to be considered an enrolment
+  if (!enrolmentG || enrolmentG.toUpperCase().includes('NAMA PESAKIT') || enrolmentG.toUpperCase().includes('PENDAFTARAN')) {
     return null;
   }
 
@@ -1095,11 +1094,13 @@ function parseRowObject(cells, fallbackDaerah, fallbackKK) {
   let daerah = sanitizeDaerahName(rawDaerah, fallbackDaerah);
   let kk = sanitizeFacilityName(rawKK, fallbackKK);
 
-  const enrolmentG = getVal('G');
-
-  // Skip header titles
-  if (enrolmentG.toUpperCase().includes('PENDAFTARAN') || daerah === 'DAERAH') {
-    return null;
+  // Gender (Column L)
+  const jantinaRaw = getVal('L').toUpperCase();
+  let jantina = 'LAIN-LAIN';
+  if (jantinaRaw.includes('LELAKI') || jantinaRaw === 'L' || jantinaRaw === 'MALE') {
+    jantina = 'LELAKI';
+  } else if (jantinaRaw.includes('PEREMPUAN') || jantinaRaw === 'P' || jantinaRaw === 'FEMALE') {
+    jantina = 'PEREMPUAN';
   }
 
   // Anthropometry & Clinical Data
