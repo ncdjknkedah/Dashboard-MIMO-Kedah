@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard MIMO Kedah – Program Pengurusan Obesiti Bersepadu</title>
-  <meta name="description" content="Dashboard pemantauan Program MIMO (Pengurusan Obesiti Bersepadu) Kedah. Menunjukkan enrolment, status aktif, data klinikal, dan pencapaian KPI mengikut daerah dan klinik kesihatan." />
+  <meta name="description" content="Dashboard pemantauan Program MIMO Kedah real-time dari Google Sheets." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..800;1,14..32,300..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -64,7 +64,7 @@
       align-items: center;
       gap: 0.8rem;
       border-bottom: 1px solid var(--border);
-      height: 69px; /* Align with main header */
+      height: 69px;
     }
     .sidebar-header h2 {
       font-family: 'Plus Jakarta Sans', sans-serif;
@@ -306,6 +306,237 @@
     @media(max-width:1100px){.grid-2,.grid-3{grid-template-columns:1fr}}
     @media(max-width:768px){main{padding:1rem};header{padding:0 1rem}}
     @media(max-width:520px){.stats-grid{grid-template-columns:1fr 1fr}; .hbadge{display:none;} }
+
+    /* ── MODAL STYLES ── */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(4, 7, 16, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-content {
+      background: var(--card2);
+      border: 1px solid var(--border-g);
+      border-radius: var(--r);
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+    }
+    .modal-overlay.open .modal-content {
+      transform: scale(1);
+    }
+    .modal-hdr {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-hdr h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--t1);
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--t2);
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--c-rose); }
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .modal-table-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      overflow-x: auto;
+      margin-bottom: 1.25rem;
+    }
+    .modal-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+    .modal-table th {
+      background: rgba(255,255,255,0.02);
+      color: var(--t2);
+      padding: 0.6rem 0.8rem;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-table td {
+      padding: 0.6rem 0.8rem;
+      border-bottom: 1px solid rgba(255,255,255,0.02);
+      vertical-align: middle;
+    }
+    .modal-table tr:last-child td { border-bottom: none; }
+    .btn-delete-source {
+      background: rgba(251, 113, 133, 0.1);
+      border: 1px solid rgba(251, 113, 133, 0.25);
+      color: var(--c-rose);
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.72rem;
+    }
+    .btn-delete-source:hover {
+      background: var(--c-rose);
+      color: white;
+    }
+    .modal-form {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      padding: 1.2rem;
+    }
+    .form-row {
+      display: flex;
+      gap: 1rem;
+    }
+    .form-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .form-col label {
+      font-size: 0.7rem;
+      color: var(--t2);
+      font-weight: 500;
+    }
+    .form-col input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--t1);
+      padding: 0.45rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .form-col input:focus {
+      border-color: var(--c-blue);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(56,189,248,0.15);
+    }
+    .btn-add-source {
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.3);
+      color: var(--c-blue);
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.8rem;
+      margin-top: 0.9rem;
+      font-weight: 600;
+      width: 100%;
+    }
+    .btn-add-source:hover {
+      background: var(--c-blue);
+      color: var(--bg);
+    }
+    .modal-ftr {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--t2);
+      padding: 0.5rem 1.2rem;
+      border-radius: var(--rs);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.8rem;
+    }
+    .btn-cancel:hover {
+      border-color: var(--t2);
+      color: var(--t1);
+    }
+    .btn-save {
+      background: var(--g-blue);
+      border: none;
+      color: white;
+      padding: 0.5rem 1.5rem;
+      border-radius: var(--rs);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      font-size: 0.8rem;
+      box-shadow: 0 4px 14px rgba(14,165,233,0.3);
+    }
+    .btn-save:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(14,165,233,0.4);
+    }
+
+    /* ── LOADING SPINNER ── */
+    .loader-container {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(7, 12, 24, 0.9);
+      backdrop-filter: blur(8px);
+      z-index: 1500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s ease;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(56,189,248,0.15);
+      border-radius: 50%;
+      border-top-color: var(--c-blue);
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loader-text {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: var(--t1);
+      font-weight: 500;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .loader-subtext {
+      margin-top: 0.35rem;
+      font-size: 0.75rem;
+      color: var(--t2);
+    }
   </style>
 </head>
 <body>
@@ -320,6 +551,9 @@
     <a href="#" class="nav-link active">
       <span>📊</span> Dashboard MIMO Kedah
     </a>
+    <a href="#" class="nav-link" id="btnManageSources">
+      <span>⚙️</span> Urus Sumber Data
+    </a>
     <a href="https://sites.google.com/moh.gov.my/sistem/reten-mimo" target="_blank" class="nav-link">
       <span>📝</span> Pendaftaran Pesakit
     </a>
@@ -331,6 +565,13 @@
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+<!-- LOADING SCREEN -->
+<div class="loader-container" id="loaderContainer">
+  <div class="spinner"></div>
+  <div class="loader-text" id="loaderText">Memuatkan data MIMO...</div>
+  <div class="loader-subtext" id="loaderSubtext">Menghubungi Google Sheets API</div>
+</div>
+
 <div class="main-wrapper" id="mainWrapper">
   
   <header>
@@ -339,11 +580,11 @@
       <div class="logo">
         <div>
           <h1>Dashboard MIMO Kedah</h1>
-          <p>Unit Kawalan Penyakit Tidak Berjangkit (NCD)</p></p>
+          <p>Unit Kawalan Penyakit Tidak Berjangkit (NCD)</p>
         </div>
       </div>
       <div class="hdiv"></div>
-      <div class="live"><div class="dot"></div><span id="tsDisplay">1 Julai 2026</span></div>
+      <div class="live"><div class="dot"></div><span id="tsDisplay">Sedang mengemaskini...</span></div>
       <div class="hbadge">🎯 Sasaran KPI: 100%</div>
     </div>
   </header>
@@ -370,11 +611,13 @@
         <select id="fStatus" onchange="applyFilters()">
           <option value="">Semua Status</option>
           <option value="AKTIF">Aktif Sahaja</option>
+          <option value="TIDAK AKTIF">Tidak Aktif Sahaja</option>
         </select>
       </div>
       <button class="btn-reset" onclick="resetFilters()">↺ Set Semula</button>
       <div class="fcnt" id="fcnt">— pesakit</div>
     </div>
+
     <section>
       <div class="sec-hdr">
         <div class="sec-ico" style="background:rgba(56,189,248,.1)">📊</div>
@@ -385,7 +628,7 @@
           <div class="sico">👥</div>
           <div class="sval" id="sTotal">—</div>
           <div class="slbl">Jumlah Enrolment</div>
-          <div class="ssub">📋 Keseluruhan pesakit didaftarkan</div>
+          <div class="ssub">📋 Dikira dari Kolum G (Row 8+)</div>
         </div>
         <div class="scard teal">
           <div class="sico">✅</div>
@@ -397,13 +640,13 @@
           <div class="sico">🏥</div>
           <div class="sval" id="sKK">—</div>
           <div class="slbl">Klinik Terlibat</div>
-          <div class="ssub">📍 Klinik Kesihatan aktif</div>
+          <div class="ssub">📍 Bilangan Fasiliti Active</div>
         </div>
         <div class="scard amber">
           <div class="sico">🗺️</div>
           <div class="sval" id="sDaerah">—</div>
           <div class="slbl">Daerah Terlibat</div>
-          <div class="ssub">🌏 Daerah</div>
+          <div class="ssub">🌏 Unik Daerah (Kolum B)</div>
         </div>
         <div class="scard green">
           <div class="sico">🎯</div>
@@ -415,6 +658,7 @@
         </div>
       </div>
     </section>
+
     <section>
       <div class="sec-hdr">
         <div class="sec-ico" style="background:rgba(45,212,191,.1)">🔬</div>
@@ -423,7 +667,7 @@
       <div class="grid-2" style="margin-bottom:1.1rem">
         <div class="ccard">
           <div class="ctitle">Taburan Jantina</div>
-          <div class="csub">Bilangan pesakit aktif mengikut jantina</div>
+          <div class="csub">Kolum L – Bilangan pesakit aktif mengikut jantina</div>
           <div class="dnut-wrap">
             <div style="width:175px;height:175px;flex-shrink:0"><canvas id="cGender"></canvas></div>
             <div class="dlegend" id="lgGender"></div>
@@ -431,14 +675,14 @@
         </div>
         <div class="ccard">
           <div class="ctitle">Kategori Indeks Jisim Badan (BMI)</div>
-          <div class="csub">Klasifikasi WHO Asia Pacific — pesakit aktif sahaja</div>
+          <div class="csub">Kolum V – Klasifikasi WHO Asia Pacific (pesakit aktif)</div>
           <div class="bstack" id="bmiStack"></div>
         </div>
       </div>
       <div class="grid-3" style="margin-bottom:1.1rem">
         <div class="ccard">
           <div class="ctitle">Ukur Lilit Pinggang</div>
-          <div class="csub">Risiko metabolik: Perempuan ≥80 cm / Lelaki ≥90 cm</div>
+          <div class="csub">Kolum W – Risiko metabolik: Perempuan ≥80 cm / Lelaki ≥90 cm</div>
           <div class="dnut-wrap" style="margin-top:.5rem">
             <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cWC"></canvas></div>
             <div class="dlegend" id="lgWC"></div>
@@ -446,7 +690,7 @@
         </div>
         <div class="ccard">
           <div class="ctitle">Tekanan Darah (BP)</div>
-          <div class="csub">Klasifikasi CPG MOH Malaysia (mmHg)</div>
+          <div class="csub">Kolum X (Sistolik) &amp; Kolum Y (Diastolik)</div>
           <div class="dnut-wrap" style="margin-top:.5rem">
             <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cBP"></canvas></div>
             <div class="dlegend" id="lgBP"></div>
@@ -454,7 +698,7 @@
         </div>
         <div class="ccard">
           <div class="ctitle">Glukosa Darah Puasa (FBS)</div>
-          <div class="csub">Klasifikasi CPG Diabetes MOH (mmol/L)</div>
+          <div class="csub">Kolum Z – Klasifikasi CPG Diabetes MOH (mmol/L)</div>
           <div class="dnut-wrap" style="margin-top:.5rem">
             <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cFBS"></canvas></div>
             <div class="dlegend" id="lgFBS"></div>
@@ -464,12 +708,12 @@
       <div class="grid-2" style="margin-bottom:1.1rem">
         <div class="ccard">
           <div class="ctitle">Kawalan HbA1c (%)</div>
-          <div class="csub">Kategori kawalan gula darah jangka panjang (hanya pesakit ada nilai)</div>
+          <div class="csub">Kolum AD – Kawalan gula darah jangka panjang</div>
           <div style="height:215px;margin-top:.5rem"><canvas id="cHba1c"></canvas></div>
         </div>
         <div class="ccard">
           <div class="ctitle">Profil Lipid – Total Kolesterol</div>
-          <div class="csub">Klasifikasi risiko cardiovaskular CPG MOH (mmol/L)</div>
+          <div class="csub">Kolum AF – Klasifikasi CPG MOH (mmol/L)</div>
           <div class="dnut-wrap" style="margin-top:.5rem">
             <div style="width:155px;height:155px;flex-shrink:0"><canvas id="cLipid"></canvas></div>
             <div class="dlegend" id="lgLipid"></div>
@@ -477,27 +721,29 @@
         </div>
       </div>
     </section>
+
     <section>
       <div class="sec-hdr">
         <div class="sec-ico" style="background:rgba(167,139,250,.1)">🏆</div>
         <div>
           <h2>Pencapaian KPI Mengikut Klinik Kesihatan</h2>
-          <small>% Pesakit Aktif yang Menerima ≥1 Intervensi Rawatan Obesiti Bersepadu (MNT / Senaman / Tingkah Laku / Farmakologi / Bariatrik / Rujukan)</small>
+          <small>Formula KPI: (Pesakit Aktif / Jumlah Enrolment) × 100%</small>
         </div>
       </div>
       <div class="ccard">
         <div style="height:300px"><canvas id="cKpiKK"></canvas></div>
       </div>
     </section>
+
     <section>
       <div class="sec-hdr">
         <div class="sec-ico" style="background:rgba(251,191,36,.1)">📋</div>
-        <div><h2>Perbandingan Klinik Kesihatan</h2><small>Disusun mengikut pencapaian KPI — data real-time dari Google Sheets</small></div>
+        <div><h2>Perbandingan Klinik Kesihatan</h2><small>Disusun mengikut pencapaian KPI — data real-time Google Sheets</small></div>
       </div>
       <div class="tcard">
         <div class="thdr">
           <div><div class="ctitle" style="margin-bottom:0">Senarai Klinik Kesihatan MIMO Kedah</div></div>
-          <div style="font-size:.72rem;color:var(--t2)">Data: Julai 2026 &nbsp;|&nbsp; Sumber: Google Sheets MIMO KKM</div>
+          <div style="font-size:.72rem;color:var(--t2)">Sumber: Google Sheets MIMO KKM</div>
         </div>
         <div class="twrap">
           <table>
@@ -506,11 +752,10 @@
                 <th>#</th>
                 <th>Klinik Kesihatan</th>
                 <th>Daerah</th>
-                <th>Enrolment</th>
-                <th>Aktif</th>
-                <th>Terima Intervensi</th>
+                <th>Jumlah Enrolment</th>
+                <th>Pesakit Aktif</th>
                 <th>KPI (%)</th>
-                <th>Status</th>
+                <th>Status KPI</th>
               </tr>
             </thead>
             <tbody id="kkTbody"></tbody>
@@ -522,10 +767,75 @@
   
   <footer>
     <p>© 2026 Jabatan Kesihatan Negeri Kedah – Program MIMO (Pengurusan Obesiti Bersepadu) | Dikuasakan oleh Google Sheets API</p>
-    <p>⚠️ Data pesakit adalah sulit. Paparan terbaik dengan Chrome / Edge versi terkini.</p>
+    <p>⚠️ Data pesakit adalah sulit. Pastikan pautan Google Sheets boleh diakses.</p>
   </footer>
 
-</div> <script>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-content">
+    <div class="modal-hdr">
+      <h3>⚙️ Pengurusan Sumber Data Google Sheets</h3>
+      <button class="modal-close" id="closeSettings">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div style="margin-bottom:1.5rem;">
+        <p style="font-size:0.8rem;color:var(--t2);line-height:1.4;">
+          Sila masukkan pautan Google Sheets untuk setiap Klinik Kesihatan.
+          Pastikan hak akses spreadsheet telah ditetapkan kepada <strong>"Anyone with the link can view"</strong> (Sesiapa dengan pautan boleh melihat) supaya data boleh dimuat turun.
+        </p>
+      </div>
+
+      <h4 style="font-size:0.85rem;margin-bottom:0.6rem;color:var(--c-blue);font-family:'Plus Jakarta Sans',sans-serif;">Sumber Aktif Semasa</h4>
+      <div class="modal-table-wrap">
+        <table class="modal-table">
+          <thead>
+            <tr>
+              <th style="width: 20%;">Daerah</th>
+              <th style="width: 30%;">Klinik Kesihatan</th>
+              <th style="width: 25%;">Helaian Google Sheets</th>
+              <th style="width: 15%;">Status</th>
+              <th style="width: 10%;">Tindakan</th>
+            </tr>
+          </thead>
+          <tbody id="sourcesTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+
+      <h4 style="font-size:0.85rem;margin-top:1.5rem;margin-bottom:0.6rem;color:var(--c-blue);font-family:'Plus Jakarta Sans',sans-serif;">Tambah Klinik Kesihatan Baru</h4>
+      <form id="addSourceForm" class="modal-form">
+        <div class="form-row">
+          <div class="form-col">
+            <label>Daerah</label>
+            <input type="text" id="addDaerah" placeholder="Contoh: KOTA SETAR" required />
+          </div>
+          <div class="form-col">
+            <label>Klinik Kesihatan</label>
+            <input type="text" id="addKK" placeholder="Contoh: KLINIK KESIHATAN BANDAR ALOR SETAR" required />
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:0.8rem;">
+          <div class="form-col" style="flex:1;">
+            <label>Pautan Google Sheets (URL)</label>
+            <input type="url" id="addUrl" placeholder="https://docs.google.com/spreadsheets/d/.../edit" required style="width:100%;" />
+          </div>
+        </div>
+        <button type="submit" class="btn-add-source">+ Tambah Sumber Data</button>
+      </form>
+    </div>
+
+    <div class="modal-ftr">
+      <button class="btn-cancel" id="cancelSettings">Batal</button>
+      <button class="btn-save" id="saveSettings">Simpan &amp; Segarkan Data</button>
+    </div>
+  </div>
+</div>
+
+<script>
 // ════════════════════════════════════════════════════════════
 //  SIDEBAR LOGIC
 // ════════════════════════════════════════════════════════════
@@ -537,11 +847,9 @@ const closeBtn = document.getElementById('closeSidebar');
 
 function toggleSidebar() {
   if (window.innerWidth >= 1024) {
-    // Kelakuan Desktop
     sidebar.classList.toggle('closed');
     mainWrapper.classList.toggle('expanded');
   } else {
-    // Kelakuan Mobile
     sidebar.classList.toggle('open');
     if (sidebar.classList.contains('open')) {
       overlay.classList.add('show');
@@ -556,73 +864,503 @@ closeBtn.addEventListener('click', toggleSidebar);
 overlay.addEventListener('click', toggleSidebar);
 
 // ════════════════════════════════════════════════════════════
-//  DATA — Diekstrak dari Google Sheets DATA KK MIMO - KEDAH
+//  GOOGLE SHEETS CONFIGURATION & COLUMN CONVERSION
 // ════════════════════════════════════════════════════════════
-const DATA = [
-  // ── KK BANDAR SUNGAI PETANI (KUALA MUDA) ──────────────────
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   51.2,139,117,82,  4.8, null, 4.4, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   39.2,129,142,91,  8.5, 10.1, 2.9, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",45.5,120,137,95,  null, 6.5, 3.8, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",42.0,123,136,78, 12.7, 12.3, 6.4, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",44.7,112,134,108, 4.8, null, 6.1, "AKTIF","TIDAK","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",45.6,110,120,98,  9.5,  5.7, 5.1, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",34.6,103,103,81,  6.0, null, 5.4, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   43.9,135,118,87, 11.4, 10.5, 5.0, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   45.6,133,119,89,  4.9, null, 5.2, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",51.4,132,122,85,  7.3,  6.9, 4.6, "AKTIF","TIDAK","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",54.8,147,123,108,10.8, null, 4.6, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",48.8,132,123,95, 14.0, 11.4, 5.5, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","PEREMPUAN",38.0,115,137,87, 18.4,  8.2, 5.3, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   63.8,159,139,98,  4.7, null, 5.7, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   40.9,126,143,95, 17.8, 12.4, 7.8, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  ["KUALA MUDA","KK BANDAR SUNGAI PETANI","LELAKI",   42.6,127,134,85,  5.6, null, 6.4, "AKTIF","YA","YA","YA","TIADA","TIDAK","TIDAK"],
-  // ── KK BANDAR ALOR SETAR (KOTA SETAR) ─────────────────────
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",27.3,100,110,70,  4.8,  4.9, 5.4, "AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",34.9, 95,110,70,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",36.9,104,132,84,  4.7,  9.0, 6.0, "AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",34.1,102,118,79,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",31.1,103,115,84,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",29.2, 99,120,70,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",30.2, 82,121,91,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",39.0,108,110,70,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "LELAKI",   39.6,110,140,97,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",34.5,103,120,70,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",37.9,104,121,75,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",33.3,116,101,65,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",34.4,108,132,86,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
-  ["KOTA SETAR","KK BANDAR ALOR SETAR",  "PEREMPUAN",35.7,107,130,80,  null, null, null,"AKTIF","YA","YA","TIDAK","TIADA","TIDAK","TIDAK"],
+const CONFIG_KEY = 'mimo_dashboard_sources';
+
+const DEFAULT_SOURCES = [
+  {
+    daerah: "KOTA SETAR",
+    kk: "KLINIK KESIHATAN BANDAR ALOR SETAR",
+    url: "https://docs.google.com/spreadsheets/d/1C3DOYqb1kd1tJdIeEYgTQkOMbtsR3Xz86V1Mq7Yy8pA/edit?gid=0#gid=0"
+  },
+  {
+    daerah: "KUALA MUDA",
+    kk: "KLINIK KESIHATAN BANDAR SUNGAI PETANI",
+    url: "https://docs.google.com/spreadsheets/d/1cpAFhB1Eb0InvvhG238chpS1Xl6e9EnqF0HH0mn_Uo0/edit?gid=0#gid=0"
+  }
 ];
-// Column index constants
-const C = {d:0,f:1,g:2,bmi:3,wc:4,sbp:5,dbp:6,fbs:7,hba1c:8,chol:9,status:10,mnt:11,sen:12,tb:13,farm:14,bar:15,ruj:16};
-// ── Chart.js globals ──
+
+let sources = [];
+
+function colToIdx(colStr) {
+  let sum = 0;
+  for (let i = 0; i < colStr.length; i++) {
+    sum *= 26;
+    sum += colStr.charCodeAt(i) - 'A'.charCodeAt(0) + 1;
+  }
+  return sum - 1;
+}
+
+function loadSourcesConfig() {
+  const stored = localStorage.getItem(CONFIG_KEY);
+  if (stored) {
+    try {
+      sources = JSON.parse(stored);
+    } catch (e) {
+      sources = [...DEFAULT_SOURCES];
+    }
+  } else {
+    sources = [...DEFAULT_SOURCES];
+  }
+}
+
+function saveSourcesConfig() {
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(sources));
+}
+
+function parseSheetUrl(url) {
+  const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (!idMatch) return null;
+  const id = idMatch[1];
+  
+  const gidMatch = url.match(/[#&?]gid=([0-9]+)/);
+  const gid = gidMatch ? gidMatch[1] : '0';
+  
+  return { id, gid };
+}
+
+// ════════════════════════════════════════════════════════════
+//  TEXT SANITIZER
+// ════════════════════════════════════════════════════════════
+function sanitizeFacilityName(rawStr, fallbackKK) {
+  if (!rawStr) return fallbackKK.toUpperCase();
+  let str = rawStr.trim().toUpperCase();
+  
+  const match = str.match(/(KLINIK KESIHATAN [A-Z0-9\s.-]+?)\1+/i);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  
+  const generalMatch = str.match(/^(.{5,35}?)\1+$/);
+  if (generalMatch && generalMatch[1]) {
+    return generalMatch[1].trim();
+  }
+
+  if (str.length > 60 || str.includes("KLINIK KESIHATAN KLINIK KESIHATAN")) {
+    return fallbackKK.toUpperCase();
+  }
+
+  return str;
+}
+
+function sanitizeDaerahName(rawStr, fallbackDaerah) {
+  if (!rawStr) return fallbackDaerah.toUpperCase();
+  let str = rawStr.trim().toUpperCase();
+  
+  const generalMatch = str.match(/^(.{3,20}?)\1+$/);
+  if (generalMatch && generalMatch[1]) {
+    return generalMatch[1].trim();
+  }
+
+  if (str.length > 30) {
+    return fallbackDaerah.toUpperCase();
+  }
+
+  return str;
+}
+
+// ════════════════════════════════════════════════════════════
+//  DATA LOADER & PARSER ENGINE
+// ════════════════════════════════════════════════════════════
+const DATA = []; 
+let activeLoads = 0;
+let fetchedDataList = [];
+let loadErrors = [];
+
+function showLoader(show) {
+  const container = document.getElementById('loaderContainer');
+  if (!container) return;
+  if (show) {
+    container.style.display = 'flex';
+    container.style.opacity = '1';
+  } else {
+    container.style.opacity = '0';
+    setTimeout(() => {
+      container.style.display = 'none';
+    }, 300);
+  }
+}
+
+function loadAllSheets(sourcesToLoad) {
+  activeLoads = sourcesToLoad.length;
+  fetchedDataList = [];
+  loadErrors = [];
+  
+  if (sourcesToLoad.length === 0) {
+    finishLoading();
+    return;
+  }
+  
+  showLoader(true);
+  document.getElementById('loaderText').textContent = "Menghubungi Google Sheets...";
+  document.getElementById('loaderSubtext').textContent = `Mengunduh data dari ${sourcesToLoad.length} fasiliti`;
+  
+  sourcesToLoad.forEach((source, index) => {
+    const parsed = parseSheetUrl(source.url);
+    if (!parsed) {
+      handleLoadError(source, "Format URL Google Sheet tidak sah");
+      return;
+    }
+    
+    const callbackName = `gviz_callback_${index}_${Date.now()}`;
+    
+    window[callbackName] = function(response) {
+      delete window[callbackName];
+      const s = document.getElementById(`gviz_script_${index}`);
+      if (s) s.remove();
+      handleLoadSuccess(source, response);
+    };
+    
+    const script = document.createElement('script');
+    script.id = `gviz_script_${index}`;
+    script.src = `https://docs.google.com/spreadsheets/d/${parsed.id}/gviz/tq?gid=${parsed.gid}&tqx=responseHandler:${callbackName}`;
+    
+    script.onerror = function() {
+      delete window[callbackName];
+      script.remove();
+      handleLoadError(source, "Akses terhad / Gagal muat turun. Pastikan pautan ditetapkan kepada 'Anyone with link can view'.");
+    };
+    
+    document.body.appendChild(script);
+  });
+}
+
+function handleLoadSuccess(source, response) {
+  if (response.status === 'error') {
+    const errorMsg = response.errors && response.errors[0] ? response.errors[0].message : "Ralat Google Sheets API";
+    handleLoadError(source, errorMsg);
+    return;
+  }
+  
+  try {
+    const rows = response.table.rows;
+    const records = [];
+    
+    rows.forEach((r, rowIndex) => {
+      if (!r || !r.c) return;
+      const parsedRecord = parseRowObject(r.c, rowIndex, source.daerah, source.kk);
+      if (parsedRecord) {
+        records.push(parsedRecord);
+      }
+    });
+    
+    fetchedDataList.push({
+      source: source,
+      data: records
+    });
+    
+    checkComplete();
+  } catch (e) {
+    handleLoadError(source, "Ralat pemprosesan: " + e.message);
+  }
+}
+
+function parseRowObject(cells, rowIndex, fallbackDaerah, fallbackKK) {
+  // STRICT START AT SHEET ROW 8:
+  // Google Viz API treats Sheet Row 1 as Column Labels.
+  // rowIndex 0 = Sheet Row 2, ..., rowIndex 5 = Sheet Row 7 (Header).
+  // Therefore, Sheet Row 8 corresponds EXACTLY to rowIndex >= 6.
+  if (rowIndex < 6) {
+    return null;
+  }
+
+  const getVal = (colLet) => {
+    const idx = colToIdx(colLet);
+    if (!cells[idx]) return '';
+    const v = cells[idx].v !== undefined ? cells[idx].v : cells[idx];
+    return v !== null && v !== undefined ? String(v).trim() : '';
+  };
+
+  const getNum = (colLet) => {
+    const str = getVal(colLet);
+    if (!str) return null;
+    const cleaned = str.replace(',', '.').replace(/[^0-9.-]/g, '');
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? null : num;
+  };
+
+  // Check Column G (Nama Pesakit)
+  const enrolmentG = getVal('G');
+  
+  // Skip blank rows where Column G is empty
+  if (!enrolmentG) {
+    return null;
+  }
+
+  // Clean raw Daerah and KK names
+  let rawDaerah = getVal('B');
+  let rawKK = getVal('C');
+
+  let daerah = sanitizeDaerahName(rawDaerah, fallbackDaerah);
+  let kk = sanitizeFacilityName(rawKK, fallbackKK);
+
+  // Gender (Column L)
+  const jantinaRaw = getVal('L').toUpperCase();
+  let jantina = 'LAIN-LAIN';
+  if (jantinaRaw.includes('LELAKI') || jantinaRaw === 'L' || jantinaRaw === 'MALE') {
+    jantina = 'LELAKI';
+  } else if (jantinaRaw.includes('PEREMPUAN') || jantinaRaw === 'P' || jantinaRaw === 'FEMALE') {
+    jantina = 'PEREMPUAN';
+  }
+
+  // Anthropometry & Clinical Data
+  const bmi = getNum('V');
+  const wc = getNum('W');
+  const sbp = getNum('X');
+  const dbp = getNum('Y');
+  const fbs = getNum('Z');
+  const hba1c = getNum('AD');
+  const chol = getNum('AF');
+
+  // Calculate Status AKTIF: Check BH:BW and CS:DH for "YA"
+  let isActive = false;
+  const idxBH = colToIdx('BH');
+  const idxBW = colToIdx('BW');
+  for (let i = idxBH; i <= idxBW; i++) {
+    const cell = cells[i];
+    const val = cell && cell.v !== undefined ? String(cell.v).trim().toUpperCase() : '';
+    if (val === 'YA') {
+      isActive = true;
+      break;
+    }
+  }
+
+  if (!isActive) {
+    const idxCS = colToIdx('CS');
+    const idxDH = colToIdx('DH');
+    for (let i = idxCS; i <= idxDH; i++) {
+      const cell = cells[i];
+      const val = cell && cell.v !== undefined ? String(cell.v).trim().toUpperCase() : '';
+      if (val === 'YA') {
+        isActive = true;
+        break;
+      }
+    }
+  }
+
+  return {
+    daerah,
+    kk,
+    jantina,
+    bmi,
+    wc,
+    sbp,
+    dbp,
+    fbs,
+    hba1c,
+    chol,
+    status: isActive ? 'AKTIF' : 'TIDAK AKTIF',
+    isActive
+  };
+}
+
+function handleLoadError(source, message) {
+  loadErrors.push({
+    source: source,
+    message: message
+  });
+  checkComplete();
+}
+
+function checkComplete() {
+  activeLoads--;
+  if (activeLoads <= 0) {
+    finishLoading();
+  }
+}
+
+function finishLoading() {
+  showLoader(false);
+  
+  DATA.length = 0;
+  fetchedDataList.forEach(item => {
+    item.data.forEach(row => DATA.push(row));
+  });
+  
+  repopulateDropdownsAndMaintainSelection();
+  applyFilters();
+  
+  if (loadErrors.length > 0) {
+    let alertMsg = "Sebahagian data dari Google Sheets gagal dimuatkan:\n\n";
+    loadErrors.forEach(err => {
+      alertMsg += `• ${err.source.kk} (${err.source.daerah}): ${err.message}\n`;
+    });
+    alertMsg += "\nSila pastikan akses spreadsheet telah ditetapkan kepada 'Anyone with link can view'.";
+    alert(alertMsg);
+  }
+  
+  updateLastUpdatedTime();
+}
+
+function repopulateDropdownsAndMaintainSelection() {
+  const selD = document.getElementById('fDaerah');
+  const selK = document.getElementById('fKK');
+  
+  const selectedD = selD.value;
+  const selectedK = selK.value;
+  
+  selD.innerHTML = '<option value="">Semua Daerah</option>';
+  selK.innerHTML = '<option value="">Semua Klinik Kesihatan</option>';
+  
+  const daerahs = [...new Set(DATA.map(r => r.daerah))].filter(Boolean).sort();
+  const kks = [...new Set(DATA.map(r => r.kk))].filter(Boolean).sort();
+  
+  daerahs.forEach(v => selD.appendChild(new Option(v, v)));
+  kks.forEach(v => selK.appendChild(new Option(v, v)));
+  
+  if (daerahs.includes(selectedD)) selD.value = selectedD;
+  if (kks.includes(selectedK)) selK.value = selectedK;
+}
+
+function updateLastUpdatedTime() {
+  const tsDisplay = document.getElementById('tsDisplay');
+  if (tsDisplay) {
+    const now = new Date();
+    const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+    tsDisplay.textContent = `Dikemaskini: ${now.toLocaleDateString('ms-MY', options)}`;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  SETTINGS MODAL MANAGEMENT
+// ════════════════════════════════════════════════════════════
+function setupModalEvents() {
+  const modal = document.getElementById('settingsModal');
+  const btnOpen = document.getElementById('btnManageSources');
+  const btnClose = document.getElementById('closeSettings');
+  const btnCancel = document.getElementById('cancelSettings');
+  const btnSave = document.getElementById('saveSettings');
+  const formAdd = document.getElementById('addSourceForm');
+  
+  if (btnOpen) {
+    btnOpen.addEventListener('click', (e) => {
+      e.preventDefault();
+      renderSourcesTable();
+      modal.classList.add('open');
+      if (window.innerWidth < 1024) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+      }
+    });
+  }
+  
+  const closeModal = () => {
+    modal.classList.remove('open');
+    formAdd.reset();
+  };
+  
+  if (btnClose) btnClose.addEventListener('click', closeModal);
+  if (btnCancel) btnCancel.addEventListener('click', closeModal);
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+  
+  if (formAdd) {
+    formAdd.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const daerah = document.getElementById('addDaerah').value.trim().toUpperCase();
+      const kk = document.getElementById('addKK').value.trim().toUpperCase();
+      const url = document.getElementById('addUrl').value.trim();
+      
+      const parsed = parseSheetUrl(url);
+      if (!parsed) {
+        alert("Pautan Google Sheet tidak sah!");
+        return;
+      }
+      
+      sources.push({ daerah, kk, url });
+      formAdd.reset();
+      renderSourcesTable();
+    });
+  }
+  
+  if (btnSave) {
+    btnSave.addEventListener('click', () => {
+      saveSourcesConfig();
+      closeModal();
+      loadAllSheets(sources);
+    });
+  }
+}
+
+function renderSourcesTable() {
+  const tbody = document.getElementById('sourcesTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  
+  if (sources.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:1.5rem;">Tiada klinik kesihatan dikonfigurasikan.</td></tr>`;
+    return;
+  }
+  
+  sources.forEach((source, index) => {
+    const isError = loadErrors.some(err => err.source.url === source.url);
+    const successItem = fetchedDataList.find(item => item.source.url === source.url);
+    
+    let statusText = '<span class="badge b-blue" style="font-size: 0.65rem;">⏳ Menunggu</span>';
+    if (isError) {
+      statusText = '<span class="badge b-rose" style="font-size: 0.65rem;">❌ Gagal Access</span>';
+    } else if (successItem) {
+      statusText = `<span class="badge b-green" style="font-size: 0.65rem;">✅ Active (${successItem.data.length} rekod)</span>`;
+    }
+    
+    const parsed = parseSheetUrl(source.url);
+    const linkLabel = parsed ? `Spreadsheet (id=${parsed.id.substring(0,6)}...)` : 'Format ralat';
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${source.daerah}</strong></td>
+      <td><strong>${source.kk}</strong></td>
+      <td><a href="${source.url}" target="_blank" style="color:var(--c-blue);text-decoration:none;" title="${source.url}">${linkLabel} 🔗</a></td>
+      <td>${statusText}</td>
+      <td><button type="button" class="btn-delete-source" data-index="${index}">&times; Padam</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  
+  const deleteBtns = tbody.querySelectorAll('.btn-delete-source');
+  deleteBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt(e.target.getAttribute('data-index'));
+      if (confirm(`Adakah anda pasti mahu memadamkan sumber data untuk ${sources[idx].kk}?`)) {
+        sources.splice(idx, 1);
+        renderSourcesTable();
+      }
+    });
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  DASHBOARD WIDGETS & CHART RENDER LOGIC
+// ════════════════════════════════════════════════════════════
 Chart.defaults.color        = '#94a3b8';
 Chart.defaults.borderColor  = 'rgba(255,255,255,0.06)';
 Chart.defaults.font.family  = 'Inter';
 let _charts = {};
-// ── Boot ──
+
 document.addEventListener('DOMContentLoaded', () => {
-  populateDropdowns();
-  applyFilters();
+  loadSourcesConfig();
+  setupModalEvents();
+  loadAllSheets(sources);
 });
-function populateDropdowns() {
-  const daerahs = [...new Set(DATA.map(r=>r[C.d]))].sort();
-  const kks     = [...new Set(DATA.map(r=>r[C.f]))].sort();
-  const selD = document.getElementById('fDaerah');
-  const selK = document.getElementById('fKK');
-  daerahs.forEach(v => selD.appendChild(new Option(v,v)));
-  kks.forEach(v     => selK.appendChild(new Option(v,v)));
-}
+
 function applyFilters() {
   const fd = document.getElementById('fDaerah').value;
   const fk = document.getElementById('fKK').value;
   const fs = document.getElementById('fStatus').value;
+  
   const filtered = DATA.filter(r =>
-    (!fd || r[C.d]===fd) &&
-    (!fk || r[C.f]===fk) &&
-    (!fs || r[C.status]===fs)
+    (!fd || r.daerah === fd) &&
+    (!fk || r.kk === fk) &&
+    (!fs || r.status === fs)
   );
-  const active = filtered.filter(r => r[C.status]==='AKTIF');
+  
+  const active = filtered.filter(r => r.status === 'AKTIF');
+  
   document.getElementById('fcnt').textContent = `${filtered.length} pesakit dipaparkan`;
+  
   renderStats(filtered, active);
   renderGender(active);
   renderBMI(active);
@@ -634,40 +1372,43 @@ function applyFilters() {
   renderKpiChart(filtered);
   renderKKTable(filtered);
 }
+
 function resetFilters() {
   ['fDaerah','fKK','fStatus'].forEach(id => document.getElementById(id).value = '');
   applyFilters();
 }
-// ── Intervention check (columns 11–16) ──
-function hasInt(r) {
-  return [C.mnt,C.sen,C.tb,C.farm,C.bar,C.ruj].some(i => r[i]==='YA');
-}
+
+function set(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+
 // ══ STATS ══
 function renderStats(all, active) {
   const n   = all.length;
   const a   = active.length;
-  const pct = n>0 ? Math.round(a/n*100) : 0;
-  const kks = new Set(all.map(r=>r[C.f]));
-  const ds  = new Set(all.map(r=>r[C.d]));
-  const wInt = active.filter(r=>hasInt(r)).length;
-  const kpi  = a>0 ? Math.round(wInt/a*100) : 0;
+  const pct = n > 0 ? Math.round((a / n) * 100) : 0;
+  const kks = new Set(all.map(r => r.kk));
+  const ds  = new Set(all.map(r => r.daerah));
+  const kpi = n > 0 ? Math.round((a / n) * 100) : 0;
+  
   set('sTotal', n);
   set('sAktif', a);
   set('sAktifPct', `📈 ${pct}% daripada jumlah enrolment`);
   set('sKK', kks.size);
   set('sDaerah', ds.size);
-  set('sKPI', kpi+'%');
-  set('sKPIsub', `${wInt} drpd ${a} pesakit aktif menerima intervensi`);
-  document.getElementById('kpiBar').style.width = kpi+'%';
+  set('sKPI', kpi + '%');
+  set('sKPIsub', `${a} pesakit aktif daripada ${n} enrolment`);
+  
+  const bar = document.getElementById('kpiBar');
+  if (bar) bar.style.width = kpi + '%';
 }
-function set(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+
 // ══ DONUT HELPER ══
 function donut(canvasId, values, colors, legendId, labels) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
   if (_charts[canvasId]) { _charts[canvasId].destroy(); delete _charts[canvasId]; }
+  
   const total = values.reduce((a,b)=>a+b,0);
-  // Legend
+  
   const leg = document.getElementById(legendId);
   if (leg) {
     leg.innerHTML = '';
@@ -680,8 +1421,10 @@ function donut(canvasId, values, colors, legendId, labels) {
       </div>`;
     });
   }
+  
   if (total===0) { ctx.style.display='none'; return; }
   ctx.style.display='';
+  
   _charts[canvasId] = new Chart(ctx, {
     type: 'doughnut',
     data: {
@@ -701,31 +1444,33 @@ function donut(canvasId, values, colors, legendId, labels) {
     }
   });
 }
+
 // ══ GENDER ══
 function renderGender(active) {
-  const m = active.filter(r=>r[C.g]==='LELAKI').length;
-  const f = active.filter(r=>r[C.g]==='PEREMPUAN').length;
-  donut('cGender',[m,f],['#38bdf8','#fb7185'],'lgGender',['Lelaki','Perempuan']);
+  const m = active.filter(r => r.jantina === 'LELAKI').length;
+  const f = active.filter(r => r.jantina === 'PEREMPUAN').length;
+  donut('cGender', [m, f], ['#38bdf8', '#fb7185'], 'lgGender', ['Lelaki', 'Perempuan']);
 }
+
 // ══ BMI ══
 const BMI_CATS = [
-  {label:'Kurang Berat (<18.0)',  min:-Infinity, max:18,   col:'#6366f1'},
-  {label:'Normal (18.0–<23.0)',   min:18,        max:23,   col:'#34d399'},
-  {label:'Lebih Berat (23–<27.5)',min:23,        max:27.5, col:'#fbbf24'},
+  {label:'Kurang Berat (<18.5)',  min:-Infinity, max:18.5, col:'#6366f1'},
+  {label:'Normal (18.5–<23.0)',   min:18.5,      max:23.0, col:'#34d399'},
+  {label:'Lebih Berat (23–<27.5)',min:23.0,      max:27.5, col:'#fbbf24'},
   {label:'Obes I (27.5–<32.5)',   min:27.5,      max:32.5, col:'#fb923c'},
-  {label:'Obes II (32.5–<37.5)', min:32.5,      max:37.5, col:'#ef4444'},
+  {label:'Obes II (32.5–<37.5)',  min:32.5,      max:37.5, col:'#ef4444'},
   {label:'Obes III (≥37.5)',      min:37.5,      max:Infinity, col:'#9f1239'},
 ];
 function renderBMI(active) {
   const counts = BMI_CATS.map(cat =>
-    active.filter(r => { const b=r[C.bmi]; return b!=null && b>=cat.min && b<cat.max; }).length
+    active.filter(r => r.bmi !== null && r.bmi >= cat.min && r.bmi < cat.max).length
   );
   const mx = Math.max(...counts, 1);
   const el = document.getElementById('bmiStack');
   if (!el) return;
   el.innerHTML = '';
   BMI_CATS.forEach((cat,i) => {
-    const pct = Math.round(counts[i]/mx*100);
+    const pct = Math.round((counts[i] / mx) * 100);
     el.innerHTML += `<div class="brow">
       <span class="blbl">${cat.label}</span>
       <div class="btrack"><div class="bfill" style="width:${pct}%;background:${cat.col}"></div></div>
@@ -733,183 +1478,196 @@ function renderBMI(active) {
     </div>`;
   });
 }
+
 // ══ WAIST CIRCUMFERENCE ══
 function renderWC(active) {
-  let norm=0, risk=0;
+  let norm = 0, risk = 0;
   active.forEach(r => {
-    const wc=r[C.wc], g=r[C.g];
-    if (wc==null) return;
-    const thr = g==='PEREMPUAN' ? 80 : 90;
-    if (wc < thr) norm++; else risk++;
+    if (r.wc === null) return;
+    const thr = r.jantina === 'PEREMPUAN' ? 80 : 90;
+    if (r.wc < thr) norm++; else risk++;
   });
-  donut('cWC',[norm,risk],['#34d399','#ef4444'],'lgWC',['Normal','Berisiko']);
+  donut('cWC', [norm, risk], ['#34d399', '#ef4444'], 'lgWC', ['Normal', 'Berisiko']);
 }
+
 // ══ BLOOD PRESSURE ══
 function renderBP(active) {
-  let low=0, norm=0, high=0;
+  let low = 0, norm = 0, high = 0;
   active.forEach(r => {
-    const s=r[C.sbp], d=r[C.dbp];
-    if (s==null||d==null) return;
-    if (s<90||d<60)      low++;
-    else if (s>=140||d>=90) high++;
+    if (r.sbp === null || r.dbp === null) return;
+    if (r.sbp < 90 || r.dbp < 60) low++;
+    else if (r.sbp >= 140 || r.dbp >= 90) high++;
     else norm++;
   });
-  donut('cBP',[low,norm,high],['#6366f1','#34d399','#ef4444'],'lgBP',
-    ['Rendah (<90/60)','Normal (90–139/60–89)',' (≥140/90)']);
+  donut('cBP', [low, norm, high], ['#6366f1', '#34d399', '#ef4444'], 'lgBP',
+    ['Rendah (<90/60)', 'Normal (90–139/60–89)', 'Tinggi (≥140/90)']);
 }
+
 // ══ FBS (mmol/L) ══
 function renderFBS(active) {
-  let rendah=0, normal=0, praDM=0, DM=0;
+  let rendah = 0, normal = 0, praDM = 0, DM = 0;
   active.forEach(r => {
-    const v=r[C.fbs]; if (v==null) return;
-    if      (v <  3.9) rendah++;
-    else if (v <= 5.5) normal++;
-    else if (v <  7.0) praDM++;
-    else               DM++;
+    if (r.fbs === null) return;
+    if      (r.fbs < 3.9)  rendah++;
+    else if (r.fbs <= 5.5) normal++;
+    else if (r.fbs < 7.0)  praDM++;
+    else                   DM++;
   });
-  donut('cFBS',[rendah,normal,praDM,DM],
-    ['#6366f1','#34d399','#fbbf24','#ef4444'],'lgFBS',
-    ['Rendah (<3.9)','Normal (3.9–5.5)','Pra DM (5.6–6.9)','DM (≥7.0)']);
+  donut('cFBS', [rendah, normal, praDM, DM],
+    ['#6366f1', '#34d399', '#fbbf24', '#ef4444'], 'lgFBS',
+    ['Rendah (<3.9)', 'Normal (3.9–5.5)', 'Pra DM (5.6–6.9)', 'DM (≥7.0)']);
 }
+
 // ══ HbA1c ══
 function renderHba1c(active) {
-  const cats   = ['<6.5%','6.5–<7.0%','7.0–<10.0%','≥10.0%'];
-  const colors = ['#34d399','#fbbf24','#f97316','#ef4444'];
-  const counts = [0,0,0,0];
+  const cats   = ['<6.5%', '6.5–<7.0%', '7.0–<10.0%', '≥10.0%'];
+  const colors = ['#34d399', '#fbbf24', '#f97316', '#ef4444'];
+  const counts = [0, 0, 0, 0];
+  
   active.forEach(r => {
-    const h=r[C.hba1c]; if (h==null) return;
-    if      (h <  6.5) counts[0]++;
-    else if (h <  7.0) counts[1]++;
-    else if (h < 10.0) counts[2]++;
-    else               counts[3]++;
+    if (r.hba1c === null) return;
+    if      (r.hba1c < 6.5)  counts[0]++;
+    else if (r.hba1c < 7.0)  counts[1]++;
+    else if (r.hba1c < 10.0) counts[2]++;
+    else                     counts[3]++;
   });
+  
   const ctx = document.getElementById('cHba1c');
   if (!ctx) return;
   if (_charts['cHba1c']) { _charts['cHba1c'].destroy(); }
+  
   _charts['cHba1c'] = new Chart(ctx, {
-    type:'bar',
-    data:{
+    type: 'bar',
+    data: {
       labels: cats,
-      datasets:[{
+      datasets: [{
         data: counts, backgroundColor: colors,
-        borderRadius:8, borderSkipped:false,
+        borderRadius: 8, borderSkipped: false,
         label: 'Bilangan Pesakit'
       }]
     },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{ callbacks:{ label: c => ` ${c.parsed.y} pesakit` }}
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${c.parsed.y} pesakit` } }
       },
-      scales:{
-        x:{grid:{display:false}, ticks:{font:{size:11}}},
-        y:{grid:{color:'rgba(255,255,255,0.05)'}, beginAtZero:true, ticks:{precision:0}}
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true, ticks: { precision: 0 } }
       }
     }
   });
 }
-// ══ LIPID (Total Cholesterol mmol/L) ══
+
+// ══ LIPID (Total Cholesterol) ══
 function renderLipid(active) {
-  let norm=0, border=0, high=0;
+  let norm = 0, border = 0, high = 0;
   active.forEach(r => {
-    const c=r[C.chol]; if (c==null) return;
-    if      (c <  5.2) norm++;
-    else if (c <= 6.2) border++;
-    else               high++;
+    if (r.chol === null) return;
+    if      (r.chol < 5.2)  norm++;
+    else if (r.chol <= 6.2) border++;
+    else                    high++;
   });
-  donut('cLipid',[norm,border,high],['#34d399','#fbbf24','#ef4444'],'lgLipid',
-    ['Normal (<5.2)','Sempadan (5.2–6.2)','Tinggi (>6.2)']);
+  donut('cLipid', [norm, border, high], ['#34d399', '#fbbf24', '#ef4444'], 'lgLipid',
+    ['Normal (<5.2)', 'Sempadan (5.2–6.2)', 'Tinggi (>6.2)']);
 }
+
 // ══ KK DATA HELPER ══
-function getKKStats(all) {
+function getKKStats(allData) {
   const map = {};
-  all.forEach(r => {
-    const key = r[C.f];
-    if (!map[key]) map[key] = {fac:key, dar:r[C.d], total:0, aktif:0, intv:0};
+  allData.forEach(r => {
+    const key = r.kk || 'LAIN-LAIN';
+    if (!map[key]) {
+      map[key] = { fac: key, dar: r.daerah, total: 0, aktif: 0 };
+    }
     map[key].total++;
-    if (r[C.status]==='AKTIF') {
+    if (r.status === 'AKTIF') {
       map[key].aktif++;
-      if (hasInt(r)) map[key].intv++;
     }
   });
+  
   return Object.values(map).map(k => ({
     ...k,
-    kpi: k.aktif>0 ? Math.round(k.intv/k.aktif*100) : 0
+    kpi: k.total > 0 ? Math.round((k.aktif / k.total) * 100) : 0
   }));
 }
+
 // ══ KPI CHART ══
 function renderKpiChart(all) {
-  const data   = getKKStats(all).sort((a,b)=>b.kpi-a.kpi);
+  const data   = getKKStats(all).sort((a,b) => b.kpi - a.kpi);
   const labels = data.map(k => k.fac);
   const kpis   = data.map(k => k.kpi);
   const enroll = data.map(k => k.total);
+  
   const ctx = document.getElementById('cKpiKK');
   if (!ctx) return;
   if (_charts['cKpiKK']) _charts['cKpiKK'].destroy();
+  
   _charts['cKpiKK'] = new Chart(ctx, {
-    type:'bar',
-    data:{
+    type: 'bar',
+    data: {
       labels,
-      datasets:[
+      datasets: [
         {
-          label:'KPI (%)',
+          label: 'KPI (%)',
           data: kpis,
-          backgroundColor: kpis.map(v=>v>=80?'rgba(52,211,153,.75)':v>=50?'rgba(251,191,36,.75)':'rgba(239,68,68,.75)'),
-          borderRadius:8, borderSkipped:false, yAxisID:'yKPI', order:1
+          backgroundColor: kpis.map(v => v >= 80 ? 'rgba(52,211,153,.75)' : v >= 50 ? 'rgba(251,191,36,.75)' : 'rgba(239,68,68,.75)'),
+          borderRadius: 8, borderSkipped: false, yAxisID: 'yKPI', order: 1
         },
         {
-          label:'Jumlah Enrolment',
-          data: enroll, type:'line',
-          borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,.08)',
-          pointBackgroundColor:'#38bdf8', pointRadius:6, pointHoverRadius:8,
-          fill:true, tension:.35, yAxisID:'yE', order:0
+          label: 'Jumlah Enrolment',
+          data: enroll, type: 'line',
+          borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,.08)',
+          pointBackgroundColor: '#38bdf8', pointRadius: 6, pointHoverRadius: 8,
+          fill: true, tension: .35, yAxisID: 'yE', order: 0
         }
       ]
     },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{mode:'index', intersect:false},
-      plugins:{
-        legend:{position:'top', labels:{usePointStyle:true, padding:16, font:{size:12}}},
-        tooltip:{
-          callbacks:{
-            label: c => c.dataset.label==='KPI (%)'
-              ? ` KPI: ${c.parsed.y}%`
-              : ` Enrolment: ${c.parsed.y} pesakit`
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16, font: { size: 12 } } },
+        tooltip: {
+          callbacks: {
+            label: c => c.dataset.label === 'KPI (%)' ? ` KPI: ${c.parsed.y}%` : ` Enrolment: ${c.parsed.y} pesakit`
           }
         }
       },
-      scales:{
-        x:{grid:{display:false}, ticks:{font:{size:11}}},
-        yKPI:{
-          position:'left', min:0, max:110,
-          title:{display:true, text:'KPI (%)', font:{size:11}},
-          grid:{color:'rgba(255,255,255,0.05)'},
-          ticks:{callback:v=>v+'%'}
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        yKPI: {
+          position: 'left', min: 0, max: 110,
+          title: { display: true, text: 'KPI (%)', font: { size: 11 } },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { callback: v => v + '%' }
         },
-        yE:{
-          position:'right',
-          title:{display:true, text:'Bilangan Enrolment', font:{size:11}},
-          grid:{display:false}, beginAtZero:true,
-          ticks:{precision:0}
+        yE: {
+          position: 'right',
+          title: { display: true, text: 'Bilangan Enrolment', font: { size: 11 } },
+          grid: { display: false }, beginAtZero: true,
+          ticks: { precision: 0 }
         }
       }
     }
   });
 }
+
 // ══ KK TABLE ══
 function renderKKTable(all) {
-  const data  = getKKStats(all).sort((a,b)=>b.kpi-a.kpi);
+  const data  = getKKStats(all).sort((a,b) => b.kpi - a.kpi);
   const tbody = document.getElementById('kkTbody');
   if (!tbody) return;
   tbody.innerHTML = '';
-  data.forEach((kk,i) => {
-    const rank = i+1;
-    const rc   = rank===1?'r1':rank===2?'r2':rank===3?'r3':'rn';
-    const kc   = kk.kpi>=80?'b-green':kk.kpi>=50?'b-amber':'b-rose';
-    const ks   = kk.kpi>=80?'✅ Cemerlang':kk.kpi>=50?'⚠️ Sederhana':'❌ Perlu Ditingkat';
-    const fill = kk.kpi>=80?'#34d399':kk.kpi>=50?'#fbbf24':'#ef4444';
+  
+  data.forEach((kk, i) => {
+    const rank = i + 1;
+    const rc   = rank === 1 ? 'r1' : rank === 2 ? 'r2' : rank === 3 ? 'r3' : 'rn';
+    const kc   = kk.kpi >= 80 ? 'b-green' : kk.kpi >= 50 ? 'b-amber' : 'b-rose';
+    const ks   = kk.kpi >= 80 ? '✅ Cemerlang' : kk.kpi >= 50 ? '⚠️ Sederhana' : '❌ Perlu Ditingkat';
+    const fill = kk.kpi >= 80 ? '#34d399' : kk.kpi >= 50 ? '#fbbf24' : '#ef4444';
+    
     tbody.innerHTML += `
       <tr>
         <td><div class="rnk ${rc}">${rank}</div></td>
@@ -918,9 +1676,8 @@ function renderKKTable(all) {
         <td><strong>${kk.total}</strong></td>
         <td>
           <strong>${kk.aktif}</strong>
-          <span style="color:var(--t3);font-size:.7rem"> (${kk.total>0?Math.round(kk.aktif/kk.total*100):0}%)</span>
+          <span style="color:var(--t3);font-size:.7rem"> (${kk.total > 0 ? Math.round((kk.aktif / kk.total) * 100) : 0}%)</span>
         </td>
-        <td>${kk.intv} pesakit</td>
         <td>
           <div class="pbar">
             <strong style="color:${fill}">${kk.kpi}%</strong>
